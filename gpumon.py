@@ -24,19 +24,42 @@ def print_out(gpu_dict):
 
 
 def nvidia_run():
-    return subprocess.run(["nvidia-smi", "-x", "-q"], stdout=subprocess.PIPE)
+    return subprocess.run(["nvidia-smi", "-x", "-q"], stdout=subprocess.PIPE).stdout
+
+
+def extract(xml_data):
+    return pipe(xml_data,
+                xml2json,
+                extract_fields)
 
 
 def extract_and_print(xml_data):
     pipe(xml_data,
-         xml2json,
-         extract_fields,
+         extract,
          print_out)
 
 
 def run_continuously(processing_func):
     while True:
         pipe(nvidia_run, processing_func)
+
+        
+def gpu_plot(data, num_gpus=4, plot_width=600, plot_height=400, y_range=(0, 110)):
+    """
+    """
+    p = figure(plot_width=plot_width, plot_height=plot_height, y_range=y_range)
+    for gpu, color in zip(range(num_gpus), Paired[12]) :
+        p.line('index', 
+               'gpu {}'.format(gpu), 
+               line_width=4, 
+               source=data, 
+               color=color, 
+               legend="GPU {}".format(gpu))
+    return p
+        
+def monitor(gpu_property):
+    
+    
 
 
 def main():
