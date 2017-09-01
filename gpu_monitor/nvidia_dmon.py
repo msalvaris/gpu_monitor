@@ -10,6 +10,10 @@ from bokeh.models import ColumnDataSource
 from bokeh.palettes import Paired
 from bokeh.plotting import figure
 from toolz import curry, pipe
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def nvidia_run_dmon(interval_seconds=1):
@@ -34,8 +38,8 @@ convert_datetime = lambda x: datetime.strptime(x, '%Y%m%d')
 convert_time = lambda x: datetime.strptime(x, '%H:%M:%S').time()
 conversion_funcs = convert_datetime, convert_time, int, int, int, int, int, int, int, int, int
 gpu_headers = 'timestamp', 'gpu', 'pwr', 'temp', 'sm', 'mem', 'enc', 'dec', 'mclk', 'pclk'
-header_dict = dict(zip(range(2, len(gpu_headers) + 2), gpu_headers[1:]))
-header_dict2 = dict(zip(range(len(gpu_headers)), gpu_headers))
+header_dict = dict(zip(range(len(gpu_headers)), gpu_headers))
+
 
 def parse_line(line_string):
     parsed_list = list((func(val) for func, val in zip(conversion_funcs, line_string.split())))
@@ -43,16 +47,10 @@ def parse_line(line_string):
 
 
 def convert_to_df(msg_list):
-    return (pd.DataFrame([line.split() for line in msg_list])
-            .pipe(lambda x: x.assign(timestamp=pd.to_datetime(x[0] + ' ' + x[1])))
+    return (pd.DataFrame(msg_list)
             .rename(columns=header_dict)
-            .drop([0, 1], axis=1)
             .dropna(how='any'))
 
-def convert_2_df(msg_list):
-    return (pd.DataFrame(msg_list)
-            .rename(columns=header_dict2)
-            .dropna(how='any'))
 
 def parse_lines(msg_list):
     msg_list = filterfalse(lambda x: '#' in x, msg_list)
@@ -61,11 +59,8 @@ def parse_lines(msg_list):
         try:
             new_list.append(parse_line(line))
         except (ValueError, TypeError):
-            pass
-    # msg_list = filterfalse(lambda x: len(x) < 60, msg_list)
-    # msg_list = filterfalse(lambda x: not x.startswith(' '), msg_list)
-    # msg_list = filterfalse(lambda x: not x.endswith('\n'), msg_list)
-    return convert_2_df(new_list)
+            logger.debug('Error parsing {}'.format(line))
+    return convert_to_df(new_list)
 
 
 def parse_log(filename):
@@ -114,12 +109,14 @@ class Logger(object):
 
 @contextmanager
 def log_context(log_file, interval_seconds=1):
-    print('Logging GPU in {}'.format(log_file))
-    proc = subprocess.Popen(["nvidia-smi",
-                             "dmon",
-                             "-d", str(interval_seconds),
-                             "-o", "DT",
-                             "-f", log_file], stdout=subprocess.PIPE)
-    yield Logger(log_file)
-    proc.terminate()
-    time.sleep(1)  # Wait to terminate TODO: Must be better method
+    logger.info('Logging GPU in {}'.format(log_file))
+    process_args = ["nvidia-smi",
+                    "dmon",
+                    "-d", str(interval_seconds),
+                    "-o", "DT",
+                    "-f", log_file]
+
+    with subprocess.Popen(process_args, stdout=subprocess.PIPE) as proc:
+        yield Logger(log_file)
+        proc.terminate()
+
