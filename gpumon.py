@@ -2,6 +2,11 @@ import json
 from xml_parser import xml2json
 from toolz import pipe
 import subprocess
+from bokeh.plotting import figure
+from bokeh.io import show, push_notebook
+from bokeh.palettes import Paired
+from bokeh.models import ColumnDataSource
+from itertools import count
 
 
 def read_data():
@@ -23,9 +28,12 @@ def print_out(gpu_dict):
     print(json.dumps(gpu_dict))
 
 
-def nvidia_run():
+def nvidia_run_xml():
     return subprocess.run(["nvidia-smi", "-x", "-q"], stdout=subprocess.PIPE).stdout
 
+
+def nvidia_run_dmon(interval_seconds=1):
+    return subprocess.run(["nvidia-smi", "dmon", "-d", str(interval_seconds), "-o", "DT"], stdout=subprocess.PIPE).stdout
 
 def extract(xml_data):
     return pipe(xml_data,
@@ -41,7 +49,7 @@ def extract_and_print(xml_data):
 
 def run_continuously(processing_func):
     while True:
-        pipe(nvidia_run, processing_func)
+        pipe(nvidia_run_xml, processing_func)
 
         
 def gpu_plot(data, num_gpus=4, plot_width=600, plot_height=400, y_range=(0, 110)):
@@ -56,9 +64,48 @@ def gpu_plot(data, num_gpus=4, plot_width=600, plot_height=400, y_range=(0, 110)
                color=color, 
                legend="GPU {}".format(gpu))
     return p
-        
-def monitor(gpu_property):
-    
+
+
+def _extract_number_from(t_string):
+    return int(t_string.split()[0])
+
+
+def _create_property_extraction_func(property_string, secondary_property):
+    def extract_(msg):
+        return {'gpu {}'.format(i): [_extract_number_from(gpu[property_string][secondary_property])] for gpu, i in zip(msg['gpu'], count())}
+
+_PROPERTY_DICT = {
+    'temperature': _create_property_extraction_func('temperature', 'gpu_temp'),
+    'utilization': _create_property_extraction_func('temperature', 'gpu_util'),
+}
+
+def create_running_func(data, gpu_property_func):
+    def start(plot_handle):
+        try:
+            num_gen=count()
+            while True:
+                new_data = pipe(nvidia_run_xml(), extract, gpu_property_func)
+                new_data['index'] = [next(num_gen)]
+                data.stream(new_data, rollover=None, setter=None)
+                push_notebook(handle=plot_handle)
+        except KeyboardInterrupt:
+            print('Exiting plotting')
+    return start
+
+
+def monitor(gpu_property_string, num_gpus=4):
+    """"
+    Parameters
+    ----------
+    gpu_property_string: temperature or utilization
+    """
+    data_dict = {'gpu {}'.format(gpu): [] for gpu in range(num_gpus)}
+    data_dict['index'] = []
+    data = ColumnDataSource(data=data_dict)
+    p = gpu_plot(data, num_gpus=4, plot_width=600, plot_height=400, y_range=(0, 110))
+    return p, create_running_func(data, _PROPERTY_DICT[gpu_property_string])
+
+
     
 
 
