@@ -26,11 +26,13 @@ links = []  # for repo urls (dependency_links)
 requires = []  # for package names
 
 try:
+    print('trying')
     requirements = pip.req.parse_requirements('requirements.txt')
 except:
     # new versions of pip requires a session
+    print('trying again')
     requirements = pip.req.parse_requirements(
-        'requirements.txt', session=pip.download.PipSession()
+        'requirements.txt', session=pip.reg.PipSession()
     )
 
 for item in requirements:
