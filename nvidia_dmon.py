@@ -35,7 +35,7 @@ convert_time = lambda x: datetime.strptime(x, '%H:%M:%S').time()
 conversion_funcs = convert_datetime, convert_time, int, int, int, int, int, int, int, int, int
 gpu_headers = 'timestamp', 'gpu', 'pwr', 'temp', 'sm', 'mem', 'enc', 'dec', 'mclk', 'pclk'
 header_dict = dict(zip(range(2, len(gpu_headers) + 2), gpu_headers[1:]))
-
+header_dict2 = dict(zip(range(len(gpu_headers)), gpu_headers))
 
 def parse_line(line_string):
     parsed_list = list((func(val) for func, val in zip(conversion_funcs, line_string.split())))
@@ -49,13 +49,23 @@ def convert_to_df(msg_list):
             .drop([0, 1], axis=1)
             .dropna(how='any'))
 
+def convert_2_df(msg_list):
+    return (pd.DataFrame(msg_list)
+            .rename(columns=header_dict2)
+            .dropna(how='any'))
 
 def parse_lines(msg_list):
-    msg_list = filterfalse(lambda x: x.startswith('#'), msg_list)
-    msg_list = filterfalse(lambda x: len(x) < 70, msg_list)
-    msg_list = filterfalse(lambda x: not x.startswith(' '), msg_list)
-    msg_list = filterfalse(lambda x: not x.endswith('\n'), msg_list)
-    return convert_to_df(msg_list)
+    msg_list = filterfalse(lambda x: '#' in x, msg_list)
+    new_list = []
+    for line in msg_list:
+        try:
+            new_list.append(parse_line(line))
+        except (ValueError, TypeError):
+            pass
+    # msg_list = filterfalse(lambda x: len(x) < 60, msg_list)
+    # msg_list = filterfalse(lambda x: not x.startswith(' '), msg_list)
+    # msg_list = filterfalse(lambda x: not x.endswith('\n'), msg_list)
+    return convert_2_df(new_list)
 
 
 def parse_log(filename):
@@ -69,17 +79,18 @@ def extract(gpu_property, df):
               .first()
               .unstack(level=1)
               .ffill()
-              .bfill())
+              .bfill()
+              .rename(columns={i:'gpu {}'.format(i) for i in range(4)}))
 
 
 def plot(df, num_gpus=4, plot_width=600, plot_height=400, y_range=(0, 110)):
     """
     """
     data = ColumnDataSource(data=df)
-    p = figure(plot_width=plot_width, plot_height=plot_height, y_range=y_range)
+    p = figure(plot_width=plot_width, plot_height=plot_height, y_range=y_range, x_axis_type="datetime")
     for gpu, color in zip(range(num_gpus), Paired[12]):
         p.line('timestamp',
-               gpu,
+               'gpu {}'.format(gpu),
                line_width=4,
                source=data,
                color=color,
@@ -92,7 +103,7 @@ class Logger(object):
         self._log_file = log_file
 
     def __call__(self):
-        parse_log(self._log_file)
+        return parse_log(self._log_file)
 
     def plot(self, gpu_property='sm'):
         df = pipe(self._log_file,
