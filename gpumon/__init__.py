@@ -1,1 +1,1 @@
-from nvidia_dmon import log_context
+from gpumon.nvidia_dmon import log_context
