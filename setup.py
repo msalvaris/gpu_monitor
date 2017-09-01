@@ -21,20 +21,9 @@ except (IOError, ImportError):
     long_description = "Python package for reading GPU properties"
 
 
-links = []  # for repo urls (dependency_links)
-requires = []  # for package names
-
-
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
-for item in requirements:
-    if getattr(item, 'url', None):  # older pip has url
-        links.append(str(item.url))
-    if getattr(item, 'link', None):  # newer pip has link
-        links.append(str(item.link))
-    if item.req:
-        requires.append(str(item.req))  # always the package name
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -55,8 +44,7 @@ setup(
     long_description=long_description,
     packages=find_packages(),
     include_package_data=True,
-    install_requires=requires,
-    dependency_links=links,
+    install_requires=requirements,
     classifiers=[
         'Development Status :: 1 - Alpha',
         'Intended Audience :: Data Scientists & Developers',
