@@ -4,8 +4,11 @@ import time
 from contextlib import contextmanager
 from datetime import datetime
 from itertools import filterfalse
-
+from toolz import curry
 import pandas as pd
+from bokeh.models import ColumnDataSource
+from bokeh.palettes import Paired
+from bokeh.plotting import figure
 
 
 def nvidia_run_dmon(interval_seconds=1):
@@ -41,11 +44,17 @@ def convert_to_df(msg_list):
     return (pd.DataFrame([line.split() for line in msg_list])
               .pipe(lambda x: x.assign(timestamp=pd.to_datetime(x[0] + ' ' + x[1])))
               .rename(columns=header_dict)
-              .drop([0, 1], axis=1))
+              .drop([0, 1], axis=1)
+              .dropna(how='any'))
 
 
 def parse_lines(msg_list):
-    return convert_to_df(filterfalse(lambda x: x.startswith('#'), msg_list))
+    # print(msg_list)
+    msg_list = filterfalse(lambda x: x.startswith('#'), msg_list)
+    msg_list = filterfalse(lambda x: len(x)<70, msg_list)
+    msg_list = filterfalse(lambda x: not x.startswith(' '), msg_list)
+    msg_list = filterfalse(lambda x: not x.endswith('\n'), msg_list)
+    return convert_to_df(msg_list)
 
 
 def parse_log(filename):
@@ -63,3 +72,27 @@ def log_context(log_file, interval_seconds=1):
                              "-f", log_file], stdout=subprocess.PIPE)
     yield lambda: parse_log(log_file)
     proc.terminate()
+    time.sleep(1) # Wait to terminate TODO: Must be better method
+    
+@curry    
+def extract(gpu_property, df):
+    return (df.groupby(['timestamp', 'gpu'])[gpu_property]
+       .first()
+       .unstack(level=1)
+       .ffill()
+       .bfill())
+
+
+def plot(df, num_gpus=4, plot_width=600, plot_height=400, y_range=(0, 110)):
+    """
+    """
+    data = ColumnDataSource(data=df)
+    p = figure(plot_width=plot_width, plot_height=plot_height, y_range=y_range)
+    for gpu, color in zip(range(num_gpus), Paired[12]):
+        p.line('timestamp',
+               gpu,
+               line_width=4,
+               source=data,
+               color=color,
+               legend="GPU {}".format(gpu))
+    return p
