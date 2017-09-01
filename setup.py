@@ -1,4 +1,3 @@
-import pip
 import os
 try:
     from setuptools import setup, find_packages
@@ -25,15 +24,9 @@ except (IOError, ImportError):
 links = []  # for repo urls (dependency_links)
 requires = []  # for package names
 
-try:
-    print('trying')
-    requirements = pip.req.parse_requirements('requirements.txt')
-except:
-    # new versions of pip requires a session
-    print('trying again')
-    requirements = pip.req.parse_requirements(
-        'requirements.txt', session=pip.reg.PipSession()
-    )
+
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
 
 for item in requirements:
     if getattr(item, 'url', None):  # older pip has url
