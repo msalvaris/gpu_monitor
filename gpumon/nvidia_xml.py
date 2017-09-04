@@ -8,7 +8,7 @@ from bokeh.palettes import Paired
 from bokeh.plotting import figure
 from toolz import pipe
 
-from gpumon.xml_parser import xml2json
+from .xml_parser import xml2json
 
 
 def extract_gpu(gpu_dict):

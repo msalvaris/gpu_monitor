@@ -1,6 +1,5 @@
-import json
-from collections import OrderedDict
 import xml.etree.cElementTree as ET
+from collections import OrderedDict
 
 
 def strip_tag(tag):
