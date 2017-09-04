@@ -78,7 +78,7 @@ def extract(gpu_property, df):
               .rename(columns={i:'gpu {}'.format(i) for i in range(4)}))
 
 
-def plot(df, num_gpus=4, plot_width=600, plot_height=400, y_range=(0, 110)):
+def plot(df, num_gpus=1, plot_width=600, plot_height=400, y_range=(0, 110)):
     """
     """
     data = ColumnDataSource(data=df)
@@ -100,7 +100,7 @@ class Logger(object):
     def __call__(self):
         return parse_log(self._log_file)
 
-    def plot(self, gpu_property='sm', num_gpus=4, plot_width=600, plot_height=400, y_range=(0, 110)):
+    def plot(self, gpu_property='sm', num_gpus=1, plot_width=600, plot_height=400, y_range=(0, 110)):
         df = pipe(self._log_file,
                   parse_log,
                   extract(gpu_property))
