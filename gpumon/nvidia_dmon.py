@@ -100,11 +100,15 @@ class Logger(object):
     def __call__(self):
         return parse_log(self._log_file)
 
-    def plot(self, gpu_property='sm'):
+    def plot(self, gpu_property='sm', num_gpus=4, plot_width=600, plot_height=400, y_range=(0, 110)):
         df = pipe(self._log_file,
                   parse_log,
                   extract(gpu_property))
-        return plot(df)
+        return plot(df,
+                    num_gpus=num_gpus,
+                    plot_width=plot_width,
+                    plot_height=plot_height,
+                    y_range=y_range)
 
 
 @contextmanager
