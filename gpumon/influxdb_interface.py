@@ -6,7 +6,7 @@ from .nvidia_dmon import parse_line
 logger = logging.getLogger(__name__)
 
 
-def _to_json(gpu_prop_list):
+def _to_json_dict(gpu_prop_list):
     return { "time": gpu_prop_list[0].strftime('%Y-%m-%dT%H:%M:%S%z'),
             "tags": {
                 "gpu": gpu_prop_list[1],
@@ -41,15 +41,35 @@ def _influxdb_writer_for(influxdb_client, measurement):
 
 
 @curry
-def call_when(write_func, predicate_func, line):
+def _call_when(write_func, predicate_func, line):
     if predicate_func(line):
         write_func(line)
 
+@curry
+def _add_tags(tags, json_dict):
+    json_dict['tags'] = merge(json_dict['tags'], tags)
+    return json_dict
 
-def create_influxdb_writer(influxdb_client, series_name="gpu_load"):
+
+def create_influxdb_writer(influxdb_client, series_name="gpu_load", **tags):
+    """ Returns function which writes to influxdb
+
+    Parameters
+    ----------
+    :param influxdb_client:
+    :param series_name: (str)
+    tags: Extra tags to be added to the measurements
+    """
     to_influxdb = _influxdb_writer_for(influxdb_client, series_name)
-    write_to_db = compose(to_influxdb,
-                          _to_json,
-                          parse_line)
-    return compose(call_when(write_to_db, lambda x: x is not None and '#' not in x),
+
+    if tags:
+        write_to_db = compose(to_influxdb,
+                              _to_json_dict,
+                              parse_line)
+    else:
+        write_to_db = compose(to_influxdb,
+                              _add_tags(tags),
+                              _to_json_dict,
+                              parse_line)
+    return compose(_call_when(write_to_db, lambda x: x is not None and '#' not in x),
                    _bytes_to_string)
