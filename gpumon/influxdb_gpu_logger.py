@@ -16,7 +16,7 @@ def _create_database(influxdb_client, database_name):
         influxdb_client.create_database(database_name)
 
 
-def main(ip_or_url, port, username, password, database):
+def main(ip_or_url, port, username, password, database, series_name='gpu_measurements', **tags):
     try:
         logger.info('Trying to connect to {} on port {} with {}:{}'.format(ip_or_url, port, username, password))
         client = InfluxDBClient(ip_or_url, port, username, password)
@@ -25,7 +25,7 @@ def main(ip_or_url, port, username, password, database):
         #TODO Check database exists if it doesn't create it
         _create_database(client, database)
 
-        to_db = create_influxdb_writer(client)
+        to_db = create_influxdb_writer(client, series_name=series_name, **tags)
         logger.info('Starting logging...')
         nvidia_run_dmon_poll(to_db)
     except KeyboardInterrupt:
