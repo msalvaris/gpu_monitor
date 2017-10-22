@@ -51,7 +51,7 @@ def _add_tags(tags, json_dict):
     return json_dict
 
 
-def create_influxdb_writer(influxdb_client, series_name="gpu_load", **tags):
+def create_influxdb_writer(influxdb_client, series_name="gpu_measurements", **tags):
     """ Returns function which writes to influxdb
 
     Parameters
