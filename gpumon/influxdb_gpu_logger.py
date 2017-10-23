@@ -43,7 +43,7 @@ def log_context(ip_or_url, port, username, password, database, series_name, **ta
 def _create_database(influxdb_client, database_name):
     dbs = influxdb_client.get_list_database()
     if database_name in [db['name'] for db in dbs]:
-        logger.info('Database {} exists')
+        logger.info('Database {} exists'.format(database_name))
         influxdb_client.switch_database(database_name)
     else:
         influxdb_client.create_database(database_name)
