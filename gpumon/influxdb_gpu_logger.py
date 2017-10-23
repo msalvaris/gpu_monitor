@@ -1,7 +1,7 @@
 from contextlib import contextmanager
-
+import fire
 import subprocess
-from influxdb import InfluxDBClient
+from influxdb import InfluxDBClient, DataFrameClient
 import logging
 
 from .nvidia_dmon import nvidia_run_dmon_poll
@@ -12,11 +12,11 @@ logger = logging.getLogger(__name__)
 
 class Logger(object):
     def __init__(self, ip_or_url, port, username, password, database, series_name):
-        self._client = InfluxDBClient(ip_or_url, port, username, password, database)# TODO:Change to DF client
+        self._client = DataFrameClient(ip_or_url, port, username, password, database)
         self._series_name = series_name
 
     def __call__(self):
-        return self._client.select_all()#TODO:Fix
+        return self._client.query("select * from {}".format(self._series_name))[self._series_name]
 
 
 @contextmanager
@@ -49,12 +49,25 @@ def _create_database(influxdb_client, database_name):
 
 
 def main(ip_or_url, port, username, password, database, series_name='gpu_measurements', **tags):
+    """ Starts GPU logger
+
+    Logs GPU measurements form nvidia-smi to influxdb
+
+    Parameters
+    ----------
+    ip_or_url:
+    port:
+    username:
+    password:
+    database:
+    series_name:
+    tags:
+    """
     try:
         logger.info('Trying to connect to {} on port {} with {}:{}'.format(ip_or_url, port, username, password))
         client = InfluxDBClient(ip_or_url, port, username, password)
         logger.info('Connected')
 
-        #TODO Check database exists if it doesn't create it
         _create_database(client, database)
 
         to_db = create_influxdb_writer(client, series_name=series_name, **tags)
@@ -65,5 +78,4 @@ def main(ip_or_url, port, username, password, database, series_name='gpu_measure
 
 
 if __name__=="__main__":
-    #TODO: Adds Fire interface
-    main(ip_or_url, port, username, password, database)
+    fire.Fire(main)
