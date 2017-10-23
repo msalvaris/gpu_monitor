@@ -7,6 +7,7 @@ import logging
 from gpumon.nvidia_dmon import nvidia_run_dmon_poll
 from gpumon.influxdb_interface import create_influxdb_writer
 
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
