@@ -4,8 +4,8 @@ import subprocess
 from influxdb import InfluxDBClient, DataFrameClient
 import logging
 
-from .nvidia_dmon import nvidia_run_dmon_poll
-from .influxdb_interface import create_influxdb_writer
+from gpumon.nvidia_dmon import nvidia_run_dmon_poll
+from gpumon.influxdb_interface import create_influxdb_writer
 
 logger = logging.getLogger(__name__)
 
