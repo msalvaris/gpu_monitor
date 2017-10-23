@@ -7,7 +7,7 @@ import logging
 from gpumon.nvidia_dmon import nvidia_run_dmon_poll
 from gpumon.influxdb_interface import create_influxdb_writer
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -49,7 +49,7 @@ def _create_database(influxdb_client, database_name):
         influxdb_client.create_database(database_name)
 
 
-def main(ip_or_url, port, username, password, database, series_name='gpu_measurements', **tags):
+def main(ip_or_url, port, username, password, database, series_name='gpu_measurements', debug=False, **tags):
     """ Starts GPU logger
 
     Logs GPU measurements form nvidia-smi to influxdb
@@ -64,6 +64,9 @@ def main(ip_or_url, port, username, password, database, series_name='gpu_measure
     series_name:
     tags:
     """
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
+
     try:
         logger.info('Trying to connect to {} on port {} with {}:{}'.format(ip_or_url, port, username, password))
         client = InfluxDBClient(ip_or_url, port, username, password)
