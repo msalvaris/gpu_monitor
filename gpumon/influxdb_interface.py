@@ -63,10 +63,12 @@ def create_influxdb_writer(influxdb_client, series_name="gpu_measurements", **ta
     to_influxdb = _influxdb_writer_for(influxdb_client, series_name)
 
     if tags:
+        logger.debug('Creating writer')
         write_to_db = compose(to_influxdb,
                               _to_json_dict,
                               parse_line)
     else:
+        logger.debug('Creating writer with tags')
         write_to_db = compose(to_influxdb,
                               _add_tags(tags),
                               _to_json_dict,
