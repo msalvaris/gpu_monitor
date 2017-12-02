@@ -56,8 +56,8 @@ def create_influxdb_writer(influxdb_client, series_name="gpu_measurements", **ta
 
     Parameters
     ----------
-    :param influxdb_client:
-    :param series_name: (str)
+    influxdb_client:
+    series_name: (str)
     tags: Extra tags to be added to the measurements
     """
     to_influxdb = _influxdb_writer_for(influxdb_client, series_name)
