@@ -64,8 +64,13 @@ def main(ip_or_url, port, username, password, database, series_name='gpu_measure
     series_name:
     tags:
     """
-    if debug:
+    print(type(debug))
+    print(debug)
+    print(tags)
+    if bool(debug):
         logging.basicConfig(level=logging.DEBUG)
+        logging.getLogger().setLevel(logging.DEBUG)
+        logger.debug('Debug logging | ON')
 
     try:
         logger.info('Trying to connect to {} on port {} with {}:{}'.format(ip_or_url, port, username, password))
