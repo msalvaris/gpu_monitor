@@ -46,29 +46,33 @@ def _create_database(influxdb_client, database_name):
         logger.info('Database {} exists'.format(database_name))
         influxdb_client.switch_database(database_name)
     else:
+        # TODO: Need to wait for database to be ready before continuing
         influxdb_client.create_database(database_name)
 
 
 def main(ip_or_url, port, username, password, database, series_name='gpu_measurements', debug=False, **tags):
     """ Starts GPU logger
 
-    Logs GPU measurements form nvidia-smi to influxdb
+    Logs GPU measurements form nvidia-smi to an influxdb database
+
 
     Parameters
     ----------
-    ip_or_url:
-    port:
-    username:
-    password:
-    database:
-    series_name:
-    tags:
+    ip_or_url: ip or url of influxdb
+    port: A number indicating the port on which influxdb is listening
+    username: Username to log into influxdb database
+    password: Password to log into influxdb database
+    database: Name of database to log data to. It will create the database if one doesn't exist
+    series_name: Name of series/table to log data to
+    tags: One or more tags to apply to the data. These can then be used to group or select timeseries
+          Example: --machine my_machine --cluster kerb01
+
+    Example
+    -------
+    influxdb_gpu_logger.py localhost 8086 username password gpudata --machine=my_gpu_machine
+
     """
-    print(type(debug))
-    print(debug)
-    print(tags)
     if bool(debug):
-        logging.basicConfig(level=logging.DEBUG)
         logging.getLogger().setLevel(logging.DEBUG)
         logger.debug('Debug logging | ON')
 
