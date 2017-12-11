@@ -33,7 +33,7 @@ def log_context(ip_or_url, port, username, password, database, series_name, **ta
                     series_name]
 
     if tags:
-        process_args.extend(tags.to_list()) # TODO:Check
+        process_args.extend(('--{}={}'.format(k,v) for k,v in tags.items()))
 
     with subprocess.Popen(process_args, stdout=subprocess.PIPE) as proc:
         yield Logger(ip_or_url, port, username, password, database, series_name)
