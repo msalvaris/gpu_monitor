@@ -4,5 +4,5 @@ toolz==0.8.2
 pip==8.1.2
 setuptools==34.4.1
 pypandoc==1.4
-influxdb==4.1.1
+influxdb==5.0.0
 fire
