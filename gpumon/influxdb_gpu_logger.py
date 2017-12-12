@@ -23,8 +23,7 @@ class Logger(object):
 @contextmanager
 def log_context(ip_or_url, port, username, password, database, series_name, **tags):
     logger.info('Logging GPU to Database {}'.format(ip_or_url))
-    process_args = ["python",
-                    "influxdb_gpu_logger.py",
+    process_args = ["influxdb_gpu_logger.py",
                     ip_or_url,
                     port,
                     username,
