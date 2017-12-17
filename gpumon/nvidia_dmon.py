@@ -47,7 +47,7 @@ header_dict = dict(zip(range(len(gpu_headers)), gpu_headers))
 
 def parse_line(line_string):
     parsed_list = list((func(val) for func, val in zip(conversion_funcs, line_string.split())))
-    logger.info(parsed_list)
+    logger.debug(parsed_list)
     return [datetime.combine(*parsed_list[:2])] + parsed_list[2:]
 
 

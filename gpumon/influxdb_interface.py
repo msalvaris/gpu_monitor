@@ -24,11 +24,6 @@ def _to_json_dict(gpu_prop_list):
            }
 
 
-def _bytes_to_string(bytes_list):
-    logger.info(bytes_list)
-    return "".join(map(chr, bytes_list))
-
-
 def _influxdb_writer_for(influxdb_client, measurement):
     mes_dict = {"measurement": measurement}
     def to_influxdf(*data_dicts):
@@ -75,5 +70,4 @@ def create_influxdb_writer(influxdb_client, series_name="gpu_measurements", **ta
                               _to_json_dict,
                               parse_line)
 
-    return compose(_call_when(write_to_db, lambda x: x is not None and '#' not in x))#,
-                   # _bytes_to_string)
+    return _call_when(write_to_db, lambda x: x is not None and '#' not in x)
