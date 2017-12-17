@@ -25,6 +25,7 @@ def _to_json_dict(gpu_prop_list):
 
 
 def _bytes_to_string(bytes_list):
+    logger.info(bytes_list)
     return "".join(map(chr, bytes_list))
 
 
