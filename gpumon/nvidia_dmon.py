@@ -33,7 +33,7 @@ def nvidia_run_dmon_poll(output_func, interval_seconds=1, polling_timeout=1, pol
 
     while True:
         if poller.poll(polling_timeout):
-            output_func(proc.stdout.readline())
+            output_func(proc.stdout.readline().decode('utf-8'))
         else:
             time.sleep(polling_interval)
 
