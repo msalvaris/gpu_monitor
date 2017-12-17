@@ -75,5 +75,5 @@ def create_influxdb_writer(influxdb_client, series_name="gpu_measurements", **ta
                               _to_json_dict,
                               parse_line)
 
-    return compose(_call_when(write_to_db, lambda x: x is not None and '#' not in x),
-                   _bytes_to_string)
+    return compose(_call_when(write_to_db, lambda x: x is not None and '#' not in x))#,
+                   # _bytes_to_string)
