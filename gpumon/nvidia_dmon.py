@@ -3,7 +3,11 @@ import subprocess
 import time
 from contextlib import contextmanager
 from datetime import datetime
-from itertools import filterfalse
+
+try:
+    from itertools import filterfalse
+except ImportError:
+    from itertools import ifilterfalse as filterfalse
 
 import pandas as pd
 from bokeh.models import ColumnDataSource
