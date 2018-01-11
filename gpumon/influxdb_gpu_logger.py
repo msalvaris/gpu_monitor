@@ -12,7 +12,13 @@ logger = logging.getLogger(__name__)
 
 
 class Logger(object):
-    def __init__(self, ip_or_url, port, username, password, database, series_name):
+    def __init__(self,
+                 ip_or_url,
+                 port,
+                 username,
+                 password,
+                 database,
+                 series_name):
         self._client = DataFrameClient(ip_or_url, port, username, password, database)
         self._series_name = series_name
 
@@ -21,7 +27,17 @@ class Logger(object):
 
 
 @contextmanager
-def log_context(ip_or_url, port, username, password, database, series_name, **tags):
+def log_context(ip_or_url,
+                port,
+                username,
+                password,
+                database,
+                series_name,
+                debug=False,
+                nvidia_polling_interval=5,
+                polling_timeout=1,
+                polling_pause=1,
+                **tags):
     logger.info('Logging GPU to Database {}'.format(ip_or_url))
     process_args = ["influxdb_gpu_logger.py",
                     ip_or_url,
@@ -29,7 +45,11 @@ def log_context(ip_or_url, port, username, password, database, series_name, **ta
                     username,
                     password,
                     database,
-                    series_name]
+                    series_name,
+                    "--debug={}".format(debug),
+                    "--nvidia_polling_interval={}".format(nvidia_polling_interval),
+                    "--polling_timeout={}".format(polling_timeout),
+                    "--polling_pause={}".format(polling_pause)]
 
     if tags:
         process_args.extend(('--{}={}'.format(k,v) for k,v in tags.items()))
@@ -50,7 +70,17 @@ def _create_database(influxdb_client, database_name):
         influxdb_client.create_database(database_name)
 
 
-def main(ip_or_url, port, username, password, database, series_name='gpu_measurements', debug=False, **tags):
+def main(ip_or_url,
+         port,
+         username,
+         password,
+         database,
+         series_name='gpu_measurements',
+         debug=False,
+         nvidia_polling_interval=5,
+         polling_timeout=1,
+         polling_pause=1,
+         **tags):
     """ Starts GPU logger
 
     Logs GPU measurements form nvidia-smi to an influxdb database
@@ -85,7 +115,10 @@ def main(ip_or_url, port, username, password, database, series_name='gpu_measure
 
         to_db = create_influxdb_writer(client, series_name=series_name, **tags)
         logger.info('Starting logging...')
-        nvidia_run_dmon_poll(to_db)
+        nvidia_run_dmon_poll(to_db,
+                             interval_seconds=nvidia_polling_interval,
+                             polling_timeout=polling_timeout,
+                             polling_interval=polling_pause)
     except KeyboardInterrupt:
         logger.info('Exiting')
 
