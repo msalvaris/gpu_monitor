@@ -23,12 +23,12 @@ pip install -e /path/to/repo
 ## Usage
 Example of running gpu monitor in Jupyter notebook
 ```python
-from gpumon import log_context
+from gpumon import file_log_context
 from bokeh.io import output_notebook, show
 
 output_notebook()# Without this the plot won't show in Jupyter notebook
 
-with log_context('log.txt') as log:
+with file_log_context('log.txt') as log:
     # GPU code
     
 show(log.plot())# Will plot the utilisation during the context
