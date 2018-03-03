@@ -1,5 +1,8 @@
 import pynvml
 from datetime import datetime
+from toolz.functoolz import compose
+import time
+
 
 def nativestr(s):
     if isinstance(s, str):
@@ -52,17 +55,36 @@ def temperature_for(device_handle):
         return None
 
 
+_MEASUREMENTS_FUNCS ={
+    "Name": device_name_for,
+    "Memory": mem_for,
+    "Utilization": utilization_for,
+    "Memory Utilization": mem_utilization_for,
+    "Power": power_for,
+    "Temperature": temperature_for,
+}
+
+def measurements_for(gpu_handle):
+    mes_dict = {k: func(gpu_handle) for k, func in _MEASUREMENTS_FUNCS}
+    mes_dict['timestamp'] = str(datetime.now())
+    return mes_dict
+
+def aggregate_measurements(device_count):
+    measures_for_device = compose(measurements_for,
+                                  pynvml.nvmlDeviceGetHandleByIndex)
+    return {i:measures_for_device(i) for i in range(device_count)}
+
+
 def main():
     pynvml.nvmlInit()
     print("Driver Version: {}".format(nativestr(pynvml.nvmlSystemGetDriverVersion())))
     deviceCount = pynvml.nvmlDeviceGetCount()
+    polling_interval=5
     try:
-        for cc in range(100):
-            print(str(datetime.now())),
-            for i in range(deviceCount):
-                handle = pynvml.nvmlDeviceGetHandleByIndex(i)
-                print([func(handle) for func in (device_name_for, mem_for, utilization_for, mem_utilization_for, power_for, temperature_for)])
-                # print("Device {} : {}".format(i, nativestr(nvmlDeviceGetName(handle))))
+        while True:
+            print(aggregate_measurements(deviceCount))
+            time.sleep(polling_interval)
+
     except KeyboardInterrupt:
         pynvml.nvmlShutdown()
 
