@@ -65,7 +65,7 @@ _MEASUREMENTS_FUNCS ={
 }
 
 def measurements_for(gpu_handle):
-    mes_dict = {k: func(gpu_handle) for k, func in _MEASUREMENTS_FUNCS}
+    mes_dict = {k: func(gpu_handle) for k, func in _MEASUREMENTS_FUNCS.items()}
     mes_dict['timestamp'] = str(datetime.now())
     return mes_dict
 
