@@ -75,17 +75,21 @@ def aggregate_measurements(device_count):
     return {i:measures_for_device(i) for i in range(device_count)}
 
 
+async def display_measurements(deviceCount, polling_interval=1):
+    while True:
+        print(aggregate_measurements(deviceCount))
+        await asyncio.sleep(polling_interval)
+
 def main():
     pynvml.nvmlInit()
     print("Driver Version: {}".format(nativestr(pynvml.nvmlSystemGetDriverVersion())))
     deviceCount = pynvml.nvmlDeviceGetCount()
     polling_interval=1
     try:
-        while True:
-            print(aggregate_measurements(deviceCount))
-            time.sleep(polling_interval)
-
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(display_measurements(deviceCount))
     except KeyboardInterrupt:
+        loop.close()
         pynvml.nvmlShutdown()
 
 if __name__=="__main__":
