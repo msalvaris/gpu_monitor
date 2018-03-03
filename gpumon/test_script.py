@@ -79,7 +79,7 @@ def main():
     pynvml.nvmlInit()
     print("Driver Version: {}".format(nativestr(pynvml.nvmlSystemGetDriverVersion())))
     deviceCount = pynvml.nvmlDeviceGetCount()
-    polling_interval=5
+    polling_interval=1
     try:
         while True:
             print(aggregate_measurements(deviceCount))
