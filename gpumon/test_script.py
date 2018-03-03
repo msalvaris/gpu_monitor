@@ -47,7 +47,7 @@ def power_for(device_handle):
 
 def temperature_for(device_handle):
     try:
-        return pynvml.nvmlDeviceGetTemperature(device_handle)
+        return pynvml.nvmlDeviceGetTemperature(device_handle, 0)
     except pynvml.NVMLError:
         return None
 
