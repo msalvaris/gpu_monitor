@@ -70,7 +70,7 @@ def measurements_for(gpu_handle):
     mes_dict['timestamp'] = str(datetime.now())
     return mes_dict
 
-async def aggregate_measurements(device_count):
+def aggregate_measurements(device_count):
     measures_for_device = compose(measurements_for,
                                   pynvml.nvmlDeviceGetHandleByIndex)
     return {i:measures_for_device(i) for i in range(device_count)}
@@ -78,7 +78,7 @@ async def aggregate_measurements(device_count):
 
 async def display_measurements(deviceCount, polling_interval=1):
     while True:
-        print(await aggregate_measurements(deviceCount))
+        aggregate_measurements(deviceCount)
         await asyncio.sleep(polling_interval)
 
 def main():
