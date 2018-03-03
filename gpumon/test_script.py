@@ -76,9 +76,13 @@ def aggregate_measurements(device_count):
     return {i:measures_for_device(i) for i in range(device_count)}
 
 
+async def print_measurements(deviceCount):
+    print(aggregate_measurements(deviceCount))
+
+
 async def display_measurements(deviceCount, polling_interval=1):
     while True:
-        print(aggregate_measurements(deviceCount))
+        await print_measurements(deviceCount)
         await asyncio.sleep(polling_interval)
 
 def main():
