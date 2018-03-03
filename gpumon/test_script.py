@@ -2,6 +2,7 @@ import pynvml
 from datetime import datetime
 from toolz.functoolz import compose
 import time
+import asyncio
 
 
 def nativestr(s):
