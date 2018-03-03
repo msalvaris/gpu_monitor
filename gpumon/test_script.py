@@ -33,7 +33,7 @@ def utilization_for(device_handle):
 
 def mem_utilization_for(device_handle):
     try:
-        return pynvml.nvmlDeviceGetUtilizationRates(device_handle).mem
+        return pynvml.nvmlDeviceGetUtilizationRates(device_handle).memory
     except pynvml.NVMLError:
         return None
 
