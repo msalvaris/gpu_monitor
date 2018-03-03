@@ -2,7 +2,7 @@ from pynvml import *
 
 
 def nativestr(s):
-    if isinstance(s, text_type):
+    if isinstance(s, str):
         return s
     return s.decode('utf-8', 'replace')
 
