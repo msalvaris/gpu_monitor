@@ -70,6 +70,7 @@ def measurements_for(gpu_handle):
     mes_dict['timestamp'] = str(datetime.now())
     return mes_dict
 
+
 def aggregate_measurements(device_count):
     measures_for_device = compose(measurements_for,
                                   pynvml.nvmlDeviceGetHandleByIndex)
@@ -85,6 +86,7 @@ async def display_measurements(deviceCount, polling_interval=1):
         await print_measurements(deviceCount)
         await asyncio.sleep(polling_interval)
 
+
 def main():
     pynvml.nvmlInit()
     print("Driver Version: {}".format(nativestr(pynvml.nvmlSystemGetDriverVersion())))
@@ -92,7 +94,7 @@ def main():
     polling_interval=1
     try:
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(display_measurements(deviceCount))
+        loop.run_until_complete(display_measurements(deviceCount, polling_interval=polling_interval))
     except KeyboardInterrupt:
         loop.close()
         pynvml.nvmlShutdown()
