@@ -3,7 +3,7 @@ from pynvml import *
 
 def main():
     nvmlInit()
-    print("Driver Version: {}").format(nvmlSystemGetDriverVersion())
+    print("Driver Version: {}".format(nvmlSystemGetDriverVersion()))
     deviceCount = nvmlDeviceGetCount()
     for i in range(deviceCount):
         handle = nvmlDeviceGetHandleByIndex(i)
