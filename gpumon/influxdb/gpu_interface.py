@@ -1,10 +1,15 @@
-import pynvml
-from datetime import datetime
-from toolz.functoolz import compose
 import asyncio
-from concurrent.futures import CancelledError
-from threading import Thread
+import logging
 import time
+from concurrent.futures import CancelledError
+from datetime import datetime
+from threading import Thread
+
+import pynvml
+from toolz.functoolz import compose
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def nativestr(s):
