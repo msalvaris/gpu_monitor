@@ -97,6 +97,8 @@ def async_function_from(output_function):
             output_function(measurement)
         except CancelledError:  # TODO: Better control for aync loop
             print("Logging cancelled")
+        except KeyboardInterrupt:
+            print("Oh NO!")
     return async_output_function
 
 
