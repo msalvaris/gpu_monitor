@@ -133,10 +133,10 @@ def main():
     except KeyboardInterrupt:
         print("Cancelling")
         task_task.cancel()
-    finally:
-        print("Closing")
-        loop.stop()
-        loop.close()
+    # finally:
+    #     print("Closing")
+    #     loop.stop()
+    #     loop.close()
 
 
 if __name__=="__main__":
