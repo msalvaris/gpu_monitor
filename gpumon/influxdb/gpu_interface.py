@@ -91,7 +91,7 @@ async def record_measurements(async_reporting_func, polling_interval=1):
     try:
         deviceCount = pynvml.nvmlDeviceGetCount()
         while True:
-            measurement = await aggregate_measurements(deviceCount)
+            measurement = await aggregate_measurements(deviceCount, polling_interval)
             await async_reporting_func(measurement)
             await asyncio.sleep(polling_interval)
     except CancelledError:  # TODO: Better control for aync loop
