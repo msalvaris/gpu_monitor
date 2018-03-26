@@ -9,7 +9,7 @@ import pynvml
 from toolz.functoolz import compose
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 def nativestr(s):
@@ -110,6 +110,8 @@ def record_gpu_to(output_function, async_loop, deviceCount=1, polling_interval=1
         logger.info("Logging cancelled")
         async_loop.stop()
         async_loop.close()
+    except KeyboardInterrupt:
+        logger.info("Oh NO!")
     finally:
         logger.info("Shutting down driver")
         pynvml.nvmlShutdown()
@@ -127,6 +129,8 @@ def main():
         t, loop = start_record_gpu_to(print)
         time.sleep(10)
     except KeyboardInterrupt:
+        logger.info("Cancelling")
+    finally:
         loop.stop()
         loop.close()
 
