@@ -9,8 +9,8 @@ import pynvml
 from toolz.functoolz import compose
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
-logger.setLevel(logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 def nativestr(s):
@@ -132,12 +132,7 @@ def main():
         logger.info("Cancelling")
         logger.info("Waiting for GPU call to finish....")
         task_task.cancel()
-    # loop.stop()
-    # loop.close()
-    # finally:
-    #     print("Closing")
-    #     loop.stop()
-    #     loop.close()
+
 
 
 if __name__=="__main__":
