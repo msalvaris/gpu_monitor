@@ -85,20 +85,20 @@ def aggregate_measurements(device_count):
 
 
 async def record_measurements(async_recording_func, deviceCount, polling_interval=1):
-    while True:
-        await async_recording_func(deviceCount)
-        await asyncio.sleep(polling_interval)
-
+    try:
+        while True:
+            await async_recording_func(deviceCount)
+            await asyncio.sleep(polling_interval)
+    except CancelledError:  # TODO: Better control for aync loop
+        print("Logging cancelled")
+    except KeyboardInterrupt:
+        print("Oh NO!")
 
 def async_function_from(output_function):
     async def async_output_function(deviceCount):
-        try:
-            measurement = aggregate_measurements(deviceCount)
-            output_function(measurement)
-        except CancelledError:  # TODO: Better control for aync loop
-            print("Logging cancelled")
-        except KeyboardInterrupt:
-            print("Oh NO!")
+        measurement = aggregate_measurements(deviceCount)
+        output_function(measurement)
+
     return async_output_function
 
 
