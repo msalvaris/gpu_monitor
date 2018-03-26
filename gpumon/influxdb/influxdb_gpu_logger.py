@@ -1,12 +1,15 @@
 import logging
 import subprocess
 from contextlib import contextmanager
+from itertools import chain
 
 import fire
 from influxdb import InfluxDBClient, DataFrameClient
+from toolz import curry, compose
 
-from gpumon.file.nvidia_dmon import nvidia_run_dmon_poll
-from gpumon.influxdb.influxdb_interface import create_influxdb_writer
+from gpumon.influxdb.gpu_interface import start_record_gpu_to
+
+# from gpumon.influxdb.influxdb_interface import create_influxdb_writer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -71,6 +74,43 @@ def _create_database(influxdb_client, database_name):
         influxdb_client.create_database(database_name)
 
 
+def _transform_gpu(gpu_num, gpu_dict, series_name, tags):
+    tags['GPU']=gpu_num
+    measurements_generator = ((gpu_dict, gpu_dict[key]) for key in set(gpu_dict.keys()) - set(['timestamp']))
+    identifiers_generator = (("measurement", series_name),
+                             ("tags", tags),
+                             ("time", gpu_dict['timestamp'].strftime('%Y-%m-%dT%H:%M:%S%z')))
+    return dict(chain(measurements_generator, identifiers_generator))
+
+
+@curry
+def _gpu_to_influxdb_format(series_name, tags, gpu_dict):
+    return [_transform_gpu(gpu, gpu_dict[gpu], series_name, tags) for gpu in gpu_dict]
+
+
+def create_influxdb_writer(influxdb_client):
+    """ Returns function which writes to influxdb
+
+    Parameters
+    ----------
+    influxdb_client:
+    series_name: (str)
+    tags: Extra tags to be added to the measurements
+    """
+
+    # def to_influxdf(data_list):
+    #     logger.debug(data_list)
+    #     if influxdb_client.write_points(data_list):
+    #         logger.debug("Success")
+    #     else:
+    #         logger.info("FAIL")
+
+    def to_influxdf(data_list):
+        logger.info(data_list)
+
+    return to_influxdf
+
+
 def main(ip_or_url,
          port,
          username,
@@ -112,14 +152,13 @@ def main(ip_or_url,
         client = InfluxDBClient(ip_or_url, port, username, password)
         logger.info('Connected')
 
+
         _create_database(client, database)
 
-        to_db = create_influxdb_writer(client, series_name=series_name, **tags)
+        to_db = compose(create_influxdb_writer(client),
+                        _gpu_to_influxdb_format(series_name, tags))
         logger.info('Starting logging...')
-        nvidia_run_dmon_poll(to_db,
-                             interval_seconds=nvidia_polling_interval,
-                             polling_timeout=polling_timeout,
-                             polling_interval=polling_pause)
+        start_record_gpu_to(to_db, polling_interval=nvidia_polling_interval)
     except KeyboardInterrupt:
         logger.info('Exiting')
 

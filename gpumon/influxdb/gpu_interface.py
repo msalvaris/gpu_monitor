@@ -4,7 +4,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 import asyncio
-
 from concurrent.futures import CancelledError
 from datetime import datetime
 from threading import Thread
@@ -89,7 +88,7 @@ async def aggregate_measurements(device_count, fetch_timeout=5):
         return {i:measures_for_device(i) for i in range(device_count)}
 
 
-async def record_measurements(async_reporting_func, polling_interval=1):
+async def record_measurements_to(async_reporting_func, polling_interval=1):
     try:
         deviceCount = pynvml.nvmlDeviceGetCount()
         while True:
@@ -98,8 +97,6 @@ async def record_measurements(async_reporting_func, polling_interval=1):
             await asyncio.sleep(polling_interval)
     except CancelledError:
         logger.info("Logging cancelled")
-    except KeyboardInterrupt:
-        logger.info("Keboard")
 
 
 def async_function_from(output_function):
@@ -108,7 +105,7 @@ def async_function_from(output_function):
     return async_output_function
 
 
-def record_gpu_to(async_task, async_loop):
+def execute_gpu_loop(async_task, async_loop):
     asyncio.set_event_loop(async_loop)
     pynvml.nvmlInit()
     logger.info("Driver Version: {}".format(nativestr(pynvml.nvmlSystemGetDriverVersion())))
@@ -119,23 +116,25 @@ def record_gpu_to(async_task, async_loop):
 
 def start_record_gpu_to(output_function, polling_interval=1):
     new_loop = asyncio.new_event_loop()
-    task = new_loop.create_task(record_measurements(async_function_from(output_function),
-                                                    polling_interval=polling_interval))
-    t = Thread(target=record_gpu_to, args=(task, new_loop))
+    task = new_loop.create_task(record_measurements_to(async_function_from(output_function),
+                                                       polling_interval=polling_interval))
+    t = Thread(target=execute_gpu_loop, args=(task, new_loop))
     t.start()
-    return t, task
+
+    def stop_recording():
+        task.cancel()
+
+    return t, stop_recording
 
 
 def main():
-
     try:
-        t, task_task = start_record_gpu_to(print)
+        t, stop_recording = start_record_gpu_to(print)
         t.join()
     except KeyboardInterrupt:
         logger.info("Cancelling")
         logger.info("Waiting for GPU call to finish....")
-        task_task.cancel()
-
+        stop_recording()
 
 
 if __name__=="__main__":

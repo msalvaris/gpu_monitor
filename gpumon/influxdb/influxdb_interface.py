@@ -1,8 +1,6 @@
 import logging
 
-from toolz import compose, merge, curry
-
-from gpumon.file.nvidia_dmon import parse_line
+from toolz import merge, curry
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +23,7 @@ def _to_json_dict(gpu_prop_list):
            }
 
 
-def _influxdb_writer_for(influxdb_client, measurement):
+def _influxdb_writer_for(influxdb_client):
     mes_dict = {"measurement": measurement}
     def to_influxdf(*data_dicts):
         merged_dicts = merge(mes_dict, *data_dicts)
@@ -48,7 +46,7 @@ def _add_tags(tags, json_dict):
     return json_dict
 
 
-def create_influxdb_writer(influxdb_client, series_name="gpu_measurements", **tags):
+def create_influxdb_writer(influxdb_client):
     """ Returns function which writes to influxdb
 
     Parameters
@@ -57,18 +55,26 @@ def create_influxdb_writer(influxdb_client, series_name="gpu_measurements", **ta
     series_name: (str)
     tags: Extra tags to be added to the measurements
     """
-    to_influxdb = _influxdb_writer_for(influxdb_client, series_name)
 
-    if tags:
-        logger.debug('Creating writer with tags')
-        write_to_db = compose(to_influxdb,
-                              _add_tags(tags),
-                              _to_json_dict,
-                              parse_line)
-    else:
-        logger.debug('Creating writer')
-        write_to_db = compose(to_influxdb,
-                              _to_json_dict,
-                              parse_line)
+    def to_influxdf(data_list):
+        logger.debug(data_list)
+        if influxdb_client.write_points(data_list):
+            logger.debug("Success")
+        else:
+            logger.info("FAIL")
 
-    return _call_when(write_to_db, lambda x: x is not None and '#' not in x)
+    return to_influxdf
+
+    # if tags:
+    #     logger.debug('Creating writer with tags')
+    #     write_to_db = compose(to_influxdb,
+    #                           _add_tags(tags),
+    #                           _to_json_dict,
+    #                           parse_line)
+    # else:
+    #     logger.debug('Creating writer')
+    #     write_to_db = compose(to_influxdb,
+    #                           _to_json_dict,
+    #                           parse_line)
+    #
+    # return _call_when(write_to_db, lambda x: x is not None and '#' not in x)
