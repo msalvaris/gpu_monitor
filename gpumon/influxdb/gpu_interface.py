@@ -125,12 +125,12 @@ def start_record_gpu_to(output_function):
 
 
 def main():
-    print("Cancelling")
+    # print("Cancelling")
     try:
         t, loop = start_record_gpu_to(print)
         time.sleep(10)
     except KeyboardInterrupt:
-        logger.info("Cancelling")
+        print("Cancelling")
     finally:
         loop.stop()
         loop.close()
