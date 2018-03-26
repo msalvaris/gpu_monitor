@@ -125,6 +125,7 @@ def start_record_gpu_to(output_function):
 
 
 def main():
+    logger.info("Cancelling")
     try:
         t, loop = start_record_gpu_to(print)
         time.sleep(10)
