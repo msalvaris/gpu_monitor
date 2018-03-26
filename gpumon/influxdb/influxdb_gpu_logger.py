@@ -77,7 +77,7 @@ def _transform_gpu(gpu_num, gpu_dict, series_name, tags):
     measurements_generator = ((gpu_dict, gpu_dict[key]) for key in set(gpu_dict.keys()) - set(['timestamp']))
     identifiers_generator = (("measurement", series_name),
                              ("tags", tags),
-                             ("time", gpu_dict['timestamp'].strftime('%Y-%m-%dT%H:%M:%S%z')))
+                             ("time", gpu_dict['timestamp']))
     return dict(chain(measurements_generator, identifiers_generator))
 
 
