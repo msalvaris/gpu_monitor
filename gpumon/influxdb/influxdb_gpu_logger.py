@@ -3,10 +3,9 @@ import subprocess
 from contextlib import contextmanager
 from itertools import chain
 
+from gpu_interface import start_record_gpu_to
 from influxdb import InfluxDBClient, DataFrameClient
 from toolz import curry, compose
-
-from gpumon.influxdb.gpu_interface import start_record_gpu_to
 
 # from gpumon.influxdb.influxdb_interface import create_influxdb_writer
 
