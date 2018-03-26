@@ -9,6 +9,7 @@ import pynvml
 from toolz.functoolz import compose
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
 logger.setLevel(logging.DEBUG)
 
 
@@ -78,26 +79,26 @@ def measurements_for(gpu_handle):
     return mes_dict
 
 
-def aggregate_measurements(device_count):
+async def aggregate_measurements(device_count):
     measures_for_device = compose(measurements_for,
                                   pynvml.nvmlDeviceGetHandleByIndex)
     return {i:measures_for_device(i) for i in range(device_count)}
 
 
-async def record_measurements(async_recording_func, deviceCount, polling_interval=1):
+async def record_measurements(async_reporting_func, polling_interval=1):
     try:
+        deviceCount = pynvml.nvmlDeviceGetCount()
         while True:
-            await async_recording_func(deviceCount)
+            measurement = await aggregate_measurements(deviceCount)
+            await async_reporting_func(measurement)
             await asyncio.sleep(polling_interval)
     except CancelledError:  # TODO: Better control for aync loop
-        print("Logging cancelled")
+        logger.info("Logging cancelled")
 
 
 def async_function_from(output_function):
-    async def async_output_function(deviceCount):
-        measurement = aggregate_measurements(deviceCount)
+    async def async_output_function(measurement):
         output_function(measurement)
-
     return async_output_function
 
 
@@ -105,19 +106,17 @@ def record_gpu_to(output_function, async_loop, deviceCount=1, polling_interval=1
     asyncio.set_event_loop(async_loop)
     pynvml.nvmlInit()
     logger.info("Driver Version: {}".format(nativestr(pynvml.nvmlSystemGetDriverVersion())))
-    deviceCount = pynvml.nvmlDeviceGetCount()
     async_loop.run_until_complete(output_function)
-    print("Shutting down driver")
+    logger.info("Shutting down driver")
     pynvml.nvmlShutdown()
 
 
 def start_record_gpu_to(output_function):
     new_loop = asyncio.new_event_loop()
-    async_output_func = async_function_from(output_function)
-    task_task = new_loop.create_task(record_measurements(async_output_func, 4, polling_interval=1))
-    t = Thread(target=record_gpu_to, args=(task_task, new_loop))
+    task = new_loop.create_task(record_measurements(async_function_from(output_function), polling_interval=1))
+    t = Thread(target=record_gpu_to, args=(task, new_loop))
     t.start()
-    return t, new_loop, task_task
+    return task
 
 
 def main():
@@ -126,7 +125,7 @@ def main():
         t, loop, task_task = start_record_gpu_to(print)
         time.sleep(10)
     except KeyboardInterrupt:
-        print("Cancelling")
+        logger.info("Cancelling")
         task_task.cancel()
     # loop.stop()
     # loop.close()
