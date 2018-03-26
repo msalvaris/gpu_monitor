@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import time
 from concurrent.futures import CancelledError
 from datetime import datetime
 from threading import Thread
@@ -121,14 +120,14 @@ def start_record_gpu_to(output_function, polling_interval=1):
                                                     polling_interval=polling_interval))
     t = Thread(target=record_gpu_to, args=(task, new_loop))
     t.start()
-    return task
+    return t, task
 
 
 def main():
 
     try:
-        task_task = start_record_gpu_to(print)
-        time.sleep(10)
+        t, task_task = start_record_gpu_to(print)
+        t.join()
     except KeyboardInterrupt:
         logger.info("Cancelling")
         logger.info("Waiting for GPU call to finish....")
