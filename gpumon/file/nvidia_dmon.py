@@ -19,23 +19,23 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+#
+# def nvidia_run_dmon(interval_seconds=1):
+#     return subprocess.run(["nvidia-smi", "dmon", "-d", str(interval_seconds), "-o", "DT"],
+#                           stdout=subprocess.PIPE).stdout
 
-def nvidia_run_dmon(interval_seconds=1):
-    return subprocess.run(["nvidia-smi", "dmon", "-d", str(interval_seconds), "-o", "DT"],
-                          stdout=subprocess.PIPE).stdout
 
-
-def nvidia_run_dmon_poll(output_func, interval_seconds=1, polling_timeout=1, polling_interval=0.2):
-    proc = subprocess.Popen(["nvidia-smi", "dmon", "-d", str(interval_seconds), "-o", "DT"], stdout=subprocess.PIPE)
-
-    poller = select.poll()
-    poller.register(proc.stdout, select.POLLIN)
-
-    while True:
-        if poller.poll(polling_timeout):
-            output_func(proc.stdout.readline().decode('utf-8'))
-        else:
-            time.sleep(polling_interval)
+# def nvidia_run_dmon_poll(output_func, interval_seconds=1, polling_timeout=1, polling_interval=0.2):
+#     proc = subprocess.Popen(["nvidia-smi", "dmon", "-d", str(interval_seconds), "-o", "DT"], stdout=subprocess.PIPE)
+#
+#     poller = select.poll()
+#     poller.register(proc.stdout, select.POLLIN)
+#
+#     while True:
+#         if poller.poll(polling_timeout):
+#             output_func(proc.stdout.readline().decode('utf-8'))
+#         else:
+#             time.sleep(polling_interval)
 
 
 convert_datetime = lambda x: datetime.strptime(x, '%Y%m%d')

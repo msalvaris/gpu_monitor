@@ -1,8 +1,10 @@
 import pynvml
 from datetime import datetime
 from toolz.functoolz import compose
-import time
 import asyncio
+from concurrent.futures import CancelledError
+from threading import Thread
+import time
 
 
 def nativestr(s):
@@ -77,27 +79,52 @@ def aggregate_measurements(device_count):
     return {i:measures_for_device(i) for i in range(device_count)}
 
 
-async def print_measurements(deviceCount):
-    print(aggregate_measurements(deviceCount))
-
-
-async def display_measurements(deviceCount, polling_interval=1):
+async def record_measurements(async_recording_func, deviceCount, polling_interval=1):
     while True:
-        await print_measurements(deviceCount)
+        await async_recording_func(deviceCount)
         await asyncio.sleep(polling_interval)
 
 
-def main():
+def async_function_from(output_function):
+    async def async_output_function(deviceCount):
+        measurement = aggregate_measurements(deviceCount)
+        output_function(measurement)
+    return async_output_function
+
+
+def record_gpu_to(output_function, async_loop, deviceCount=1, polling_interval=1):
+    asyncio.set_event_loop(async_loop)
     pynvml.nvmlInit()
-    print("Driver Version: {}".format(nativestr(pynvml.nvmlSystemGetDriverVersion())))
+    logger.info("Driver Version: {}".format(nativestr(pynvml.nvmlSystemGetDriverVersion())))
     deviceCount = pynvml.nvmlDeviceGetCount()
-    polling_interval=1
+
+    async_output_func = async_function_from(output_function)
     try:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(display_measurements(deviceCount, polling_interval=polling_interval))
-    except KeyboardInterrupt:
-        loop.close()
+        async_loop.run_until_complete(record_measurements(async_output_func, deviceCount, polling_interval=polling_interval))
+    except CancelledError: #TODO: Better control for aync loop
+        logger.info("Logging cancelled")
+        async_loop.stop()
+        async_loop.close()
+    finally:
+        logger.info("Shutting down driver")
         pynvml.nvmlShutdown()
+
+
+def start_record_gpu_to(output_function):
+    new_loop = asyncio.new_event_loop()
+    t = Thread(target=record_gpu_to, args=(output_function, new_loop))
+    t.start()
+    return t, new_loop
+
+
+def main():
+    try:
+        t, loop = start_record_gpu_to(print)
+        time.sleep(10)
+    except KeyboardInterrupt:
+        loop.stop()
+        loop.close()
+
 
 if __name__=="__main__":
     main()

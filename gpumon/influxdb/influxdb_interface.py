@@ -1,7 +1,8 @@
-from toolz import compose, merge, curry
 import logging
 
-from gpumon.nvidia_dmon import parse_line
+from toolz import compose, merge, curry
+
+from gpumon.file.nvidia_dmon import parse_line
 
 logger = logging.getLogger(__name__)
 

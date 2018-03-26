@@ -1,11 +1,12 @@
-from contextlib import contextmanager
-import fire
-import subprocess
-from influxdb import InfluxDBClient, DataFrameClient
 import logging
+import subprocess
+from contextlib import contextmanager
 
-from gpumon.nvidia_dmon import nvidia_run_dmon_poll
-from gpumon.influxdb_interface import create_influxdb_writer
+import fire
+from influxdb import InfluxDBClient, DataFrameClient
+
+from gpumon.file.nvidia_dmon import nvidia_run_dmon_poll
+from gpumon.influxdb.influxdb_interface import create_influxdb_writer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
