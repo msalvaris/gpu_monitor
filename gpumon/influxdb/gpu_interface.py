@@ -82,7 +82,7 @@ def measurements_for(gpu_handle):
 async def aggregate_measurements(device_count):
     measures_for_device = compose(measurements_for,
                                   pynvml.nvmlDeviceGetHandleByIndex)
-    return {i:measures_for_device(i) for i in range(device_count)}
+    return await {i:measures_for_device(i) for i in range(device_count)}
 
 
 async def record_measurements(async_reporting_func, polling_interval=1):
