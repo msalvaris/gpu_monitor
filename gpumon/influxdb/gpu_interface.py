@@ -67,7 +67,6 @@ def temperature_for(device_handle):
 
 
 _MEASUREMENTS_FUNCS ={
-    "Name": device_name_for,
     "Memory": mem_for,
     "Utilization": utilization_for,
     "Memory Utilization": mem_utilization_for,
