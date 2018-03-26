@@ -80,7 +80,7 @@ def measurements_for(gpu_handle):
     return mes_dict
 
 
-async def aggregate_measurements(device_count, fetch_timeout):
+async def aggregate_measurements(device_count, fetch_timeout=5):
     with async_timeout.timeout(fetch_timeout):
         measures_for_device = compose(measurements_for,
                                       pynvml.nvmlDeviceGetHandleByIndex)
@@ -91,11 +91,13 @@ async def record_measurements(async_reporting_func, polling_interval=1):
     try:
         deviceCount = pynvml.nvmlDeviceGetCount()
         while True:
-            measurement = await aggregate_measurements(deviceCount, polling_interval)
+            measurement = await aggregate_measurements(deviceCount)
             await async_reporting_func(measurement)
             await asyncio.sleep(polling_interval)
-    except CancelledError:  # TODO: Better control for aync loop
+    except CancelledError:
         logger.info("Logging cancelled")
+    except KeyboardInterrupt:
+        logger.info("Keboard")
 
 
 def async_function_from(output_function):
@@ -104,18 +106,19 @@ def async_function_from(output_function):
     return async_output_function
 
 
-def record_gpu_to(output_function, async_loop, deviceCount=1, polling_interval=1):
+def record_gpu_to(async_task, async_loop):
     asyncio.set_event_loop(async_loop)
     pynvml.nvmlInit()
     logger.info("Driver Version: {}".format(nativestr(pynvml.nvmlSystemGetDriverVersion())))
-    async_loop.run_until_complete(output_function)
+    async_loop.run_until_complete(async_task)
     logger.info("Shutting down driver")
     pynvml.nvmlShutdown()
 
 
-def start_record_gpu_to(output_function):
+def start_record_gpu_to(output_function, polling_interval=1):
     new_loop = asyncio.new_event_loop()
-    task = new_loop.create_task(record_measurements(async_function_from(output_function), polling_interval=1))
+    task = new_loop.create_task(record_measurements(async_function_from(output_function),
+                                                    polling_interval=polling_interval))
     t = Thread(target=record_gpu_to, args=(task, new_loop))
     t.start()
     return task
