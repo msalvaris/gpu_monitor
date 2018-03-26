@@ -74,8 +74,8 @@ def _create_database(influxdb_client, database_name):
 
 def _transform_gpu(gpu_num, gpu_dict, series_name, tags):
     tags['GPU']=gpu_num
-    measurements_generator = ((gpu_dict, gpu_dict[key]) for key in set(gpu_dict.keys()) - set(['timestamp']))
-    print(list(measurements_generator))
+    measurements_generator = ((key, gpu_dict[key]) for key in set(gpu_dict.keys()) - set(['timestamp']))
+    # print(list(measurements_generator))
     identifiers_generator = (("measurement", series_name),
                              # ("tags", tags),
                              ("time", gpu_dict['timestamp']))
