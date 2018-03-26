@@ -109,8 +109,8 @@ def record_gpu_to(output_function, async_loop, deviceCount=1, polling_interval=1
     deviceCount = pynvml.nvmlDeviceGetCount()
 
     try:
-        async_loop.run_forever()
-        # async_loop.run_until_complete(record_measurements(async_output_func, deviceCount, polling_interval=polling_interval))
+        # async_loop.run_forever()
+        async_loop.run_until_complete(output_function)
     except KeyboardInterrupt:
         print("Oh NO!")
     finally:
