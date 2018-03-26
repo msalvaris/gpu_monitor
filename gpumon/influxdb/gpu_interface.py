@@ -91,8 +91,7 @@ async def record_measurements(async_recording_func, deviceCount, polling_interva
             await asyncio.sleep(polling_interval)
     except CancelledError:  # TODO: Better control for aync loop
         print("Logging cancelled")
-    except KeyboardInterrupt:
-        print("Oh NO!")
+
 
 def async_function_from(output_function):
     async def async_output_function(deviceCount):
@@ -107,15 +106,9 @@ def record_gpu_to(output_function, async_loop, deviceCount=1, polling_interval=1
     pynvml.nvmlInit()
     logger.info("Driver Version: {}".format(nativestr(pynvml.nvmlSystemGetDriverVersion())))
     deviceCount = pynvml.nvmlDeviceGetCount()
-
-    try:
-        # async_loop.run_forever()
-        async_loop.run_until_complete(output_function)
-    except KeyboardInterrupt:
-        print("Oh NO!")
-    finally:
-        print("Shutting down driver")
-        pynvml.nvmlShutdown()
+    async_loop.run_until_complete(output_function)
+    print("Shutting down driver")
+    pynvml.nvmlShutdown()
 
 
 def start_record_gpu_to(output_function):
@@ -135,6 +128,8 @@ def main():
     except KeyboardInterrupt:
         print("Cancelling")
         task_task.cancel()
+    loop.stop()
+    loop.close()
     # finally:
     #     print("Closing")
     #     loop.stop()
