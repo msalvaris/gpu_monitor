@@ -1,5 +1,10 @@
-import asyncio
 import logging
+logger = logging.getLogger(__name__)
+# logging.basicConfig(level=logging.DEBUG)
+logger.setLevel(logging.INFO)
+
+import asyncio
+
 from concurrent.futures import CancelledError
 from datetime import datetime
 from threading import Thread
@@ -8,9 +13,7 @@ import async_timeout
 import pynvml
 from toolz.functoolz import compose
 
-logger = logging.getLogger(__name__)
-# logging.basicConfig(level=logging.DEBUG)
-logger.setLevel(logging.INFO)
+
 
 
 def nativestr(s):
