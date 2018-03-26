@@ -5,6 +5,7 @@ from concurrent.futures import CancelledError
 from datetime import datetime
 from threading import Thread
 
+import async_timeout
 import pynvml
 from toolz.functoolz import compose
 
@@ -79,10 +80,11 @@ def measurements_for(gpu_handle):
     return mes_dict
 
 
-async def aggregate_measurements(device_count):
-    measures_for_device = compose(measurements_for,
-                                  pynvml.nvmlDeviceGetHandleByIndex)
-    return {i:measures_for_device(i) for i in range(device_count)}
+async def aggregate_measurements(device_count, fetch_timeout):
+    with async_timeout.timeout(fetch_timeout):
+        measures_for_device = compose(measurements_for,
+                                      pynvml.nvmlDeviceGetHandleByIndex)
+        return {i:measures_for_device(i) for i in range(device_count)}
 
 
 async def record_measurements(async_reporting_func, polling_interval=1):
@@ -126,6 +128,7 @@ def main():
         time.sleep(10)
     except KeyboardInterrupt:
         logger.info("Cancelling")
+        logger.info("Waiting for GPU call to finish....")
         task_task.cancel()
     # loop.stop()
     # loop.close()
