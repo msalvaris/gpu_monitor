@@ -132,6 +132,7 @@ def main():
     except KeyboardInterrupt:
         print("Cancelling")
     finally:
+        print("Closing")
         loop.stop()
         loop.close()
 
