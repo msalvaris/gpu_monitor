@@ -3,7 +3,6 @@ import subprocess
 from contextlib import contextmanager
 from itertools import chain
 
-import fire
 from influxdb import InfluxDBClient, DataFrameClient
 from toolz import curry, compose
 
@@ -163,5 +162,28 @@ def main(ip_or_url,
         logger.info('Exiting')
 
 
+def test_main():
+    try:
+        logger.info('Trying to connect to {} on port {} with {}:{}'.format(ip_or_url, port, username, password))
+        # client = InfluxDBClient(ip_or_url, port, username, password)
+        logger.info('Connected')
+
+
+        # _create_database(client, database)
+        client=None
+        series_name="gpu_measures"
+        tags={
+            'host':'test'
+        }
+        nvidia_polling_interval=1
+        to_db = compose(create_influxdb_writer(client),
+                        _gpu_to_influxdb_format(series_name, tags))
+        logger.info('Starting logging...')
+        start_record_gpu_to(to_db, polling_interval=nvidia_polling_interval)
+    except KeyboardInterrupt:
+        logger.info('Exiting')
+
+
 if __name__=="__main__":
-    fire.Fire(main)
+    # fire.Fire(main)
+    test_main()
