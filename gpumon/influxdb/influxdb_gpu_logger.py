@@ -1,7 +1,6 @@
 import logging
 import subprocess
 from contextlib import contextmanager
-from itertools import chain
 
 import fire
 from gpu_interface import start_record_gpu_to
@@ -74,12 +73,12 @@ def _create_database(influxdb_client, database_name):
 
 
 def _transform_gpu(gpu_num, gpu_dict, series_name, tags):
-    tags['GPU']=gpu_num
-    measurements_generator = ((key, gpu_dict[key]) for key in set(gpu_dict.keys()) - set(['timestamp']))
-    identifiers_generator = (("measurement", series_name),
-                             ("tags", tags),
-                             ("time", gpu_dict['timestamp']))
-    return dict(chain(measurements_generator, identifiers_generator))
+    tags['GPU'] = gpu_num
+    # measurements_generator = ((key, gpu_dict[key]) for key in set(gpu_dict.keys()) - set(['timestamp']))
+    return {"measurement": series_name,
+            "tags": tags,
+            "time": gpu_dict['timestamp'],
+            "fields": gpu_dict}
 
 
 @curry
