@@ -97,15 +97,13 @@ def create_influxdb_writer(influxdb_client):
     tags: Extra tags to be added to the measurements
     """
 
-    # def to_influxdf(data_list):
-    #     logger.debug(data_list)
-    #     if influxdb_client.write_points(data_list):
-    #         logger.debug("Success")
-    #     else:
-    #         logger.info("FAIL")
-
     def to_influxdf(data_list):
-        logger.info(data_list)
+        logger.debug(data_list)
+        if influxdb_client.write_points(data_list):
+            logger.debug("Success")
+        else:
+            logger.info("FAIL")
+
 
     return to_influxdf
 
@@ -117,7 +115,7 @@ def main(ip_or_url,
          database,
          series_name='gpu_measurements',
          debug=False,
-         nvidia_polling_interval=5,
+         nvidia_polling_interval=1,
          polling_timeout=1,
          polling_pause=1,
          **tags):
