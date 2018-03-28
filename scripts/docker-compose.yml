@@ -1,0 +1,64 @@
+influxdb:
+  image: influxdb:latest
+  container_name: influxdb
+  ports:
+    - "8083:8083"
+    - "8086:8086"
+    - "8090:8090"
+  environment:
+    INFLUXDB_DB: GPU
+    INFLUXDB_USER: admin
+    INFLUXDB_USER_PASSWORD: password
+    INFLUXDB_ADMIN_ENABLED: "true"
+  volumes:
+    # Data persistency
+    - /home/mat:/var/lib/influxdb
+
+# busybox:
+#   image: busybox:latest
+#   container_name: grafana-storage
+#   volumes:
+#     - /var/lib/grafana
+
+grafana:
+  image: grafana/grafana:latest
+  container_name: grafana
+  ports:
+    - "3000:3000"
+  links:
+    - influxdb
+  volumes:
+    - /var/lib/grafana:/var/lib/grafana
+  environment:
+    GF_SECURITY_ADMIN_PASSWORD: password
+
+
+
+
+#   influx:
+# 	docker run -d -p $(INFLUX_DB_PORT):$(INFLUX_DB_PORT) -p 8086:8086 \
+# 	-e INFLUXDB_DB=$(INFLUXDB_DB) \
+# 	-e INFLUXDB_USER=$(INFLUXDB_USER) \
+# 	-e INFLUXDB_USER_PASSWORD=$(INFLUXDB_USER_PASSWORD) \
+# 	-v $(INFLUXDB_LOCATION):/var/lib/influxdb \
+# 	-e INFLUXDB_ADMIN_ENABLED=true \
+# 	--name influxdb \
+# 	influxdb
+# 	@echo "Influx DB $(INFLUXDB_DB) set up waiting on port $(INFLUX_DB_PORT)"
+
+
+# grafana:
+# 	# create /var/lib/grafana as persistent volume storage
+# 	docker run -d -v /var/lib/grafana --name grafana-storage busybox:latest
+
+# 	# start grafana
+# 	docker run \
+# 	  -d \
+# 	  -p $(GF_PORT):$(GF_PORT) \
+# 	  --name=grafana \
+# 	  --volumes-from grafana-storage \
+# 	  --link influxdb:influxdb \
+# 	  -e GF_SECURITY_ADMIN_PASSWORD=$(GF_ADMIN_PASSWORD) \
+# 	  -e "GF_INSTALL_PLUGINS=grafana-azure-monitor-datasource,briangann-gauge-panel,natel-plotly-panel" \
+# 	  grafana/grafana
+# @echo "Grafana set up and waiting on port $(GF_PORT)"
