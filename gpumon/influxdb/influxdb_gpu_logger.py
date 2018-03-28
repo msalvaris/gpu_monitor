@@ -4,7 +4,7 @@ logging.basicConfig(level=logging.INFO)
 from time import sleep
 
 import fire
-from gpumon.gpu_interface import start_record_gpu_to
+from gpumon.influxdb.gpu_interface import start_record_gpu_to
 from influxdb import InfluxDBClient
 from toolz import curry, compose
 
