@@ -42,7 +42,7 @@ setup(
     author_email=EMAIL,
     description=DESCRIPTION,
     long_description=long_description,
-    scripts=['gpumon/influxdb_gpu_logger.py'],
+    scripts=['gpumon/influxdb/influxdb_gpu_logger.py'],
     packages=find_packages(),
     include_package_data=True,
     install_requires=requirements,
