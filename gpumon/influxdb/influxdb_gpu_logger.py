@@ -4,7 +4,7 @@ logging.basicConfig(level=logging.INFO)
 from time import sleep
 
 import fire
-from gpumon.influxdb.gpu_interface import start_record_gpu_to
+from gpumon.influxdb.gpu_interface import start_pushing_measurements_to
 from influxdb import InfluxDBClient
 from toolz import curry, compose
 
@@ -112,7 +112,7 @@ def main(ip_or_url,
         to_db = compose(create_influxdb_writer(client),
                         _gpu_to_influxdb_format(series_name, tags))
         logger.info('Starting logging...')
-        start_record_gpu_to(to_db, polling_interval=polling_interval)
+        start_pushing_measurements_to(to_db, polling_interval=polling_interval)
     except KeyboardInterrupt:
         logger.info('Exiting')
 
