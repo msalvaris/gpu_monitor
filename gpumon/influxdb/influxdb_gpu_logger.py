@@ -1,80 +1,39 @@
 import logging
-import subprocess
-from contextlib import contextmanager
+logging.basicConfig(level=logging.INFO)
+
+from time import sleep
 
 import fire
 from gpu_interface import start_record_gpu_to
-from influxdb import InfluxDBClient, DataFrameClient
+from influxdb import InfluxDBClient
 from toolz import curry, compose
 
-# from gpumon.influxdb.influxdb_interface import create_influxdb_writer
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-
-class Logger(object):
-    def __init__(self,
-                 ip_or_url,
-                 port,
-                 username,
-                 password,
-                 database,
-                 series_name):
-        self._client = DataFrameClient(ip_or_url, port, username, password, database)
-        self._series_name = series_name
-
-    def __call__(self):
-        return self._client.query("select * from {}".format(self._series_name))[self._series_name]
+def _logger():
+    return logging.getLogger(__name__)
 
 
-@contextmanager
-def log_context(ip_or_url,
-                port,
-                username,
-                password,
-                database,
-                series_name,
-                debug=False,
-                nvidia_polling_interval=5,
-                polling_timeout=1,
-                polling_pause=1,
-                **tags):
-    logger.info('Logging GPU to Database {}'.format(ip_or_url))
-    process_args = ["influxdb_gpu_logger.py",
-                    ip_or_url,
-                    port,
-                    username,
-                    password,
-                    database,
-                    series_name,
-                    "--debug={}".format(debug),
-                    "--nvidia_polling_interval={}".format(nvidia_polling_interval),
-                    "--polling_timeout={}".format(polling_timeout),
-                    "--polling_pause={}".format(polling_pause)]
-
-    if tags:
-        process_args.extend(('--{}={}'.format(k,v) for k,v in tags.items()))
-
-    logger.info(process_args)
-    with subprocess.Popen(process_args, stdout=subprocess.PIPE) as proc:
-        yield Logger(ip_or_url, port, username, password, database, series_name)
-        proc.terminate()
+def _wait_for_database(influxdb_client, database_name):
+    dbs = influxdb_client.get_list_database()
+    logger = _logger()
+    while database_name not in [db['name'] for db in dbs]:
+        logger.info('Waiting for database {} to be created....')
+        sleep(5)
 
 
 def _create_database(influxdb_client, database_name):
     dbs = influxdb_client.get_list_database()
     if database_name in [db['name'] for db in dbs]:
-        logger.info('Database {} exists'.format(database_name))
+        _logger().info('Database {} exists'.format(database_name))
         influxdb_client.switch_database(database_name)
     else:
-        # TODO: Need to wait for database to be ready before continuing
+        _logger().info('Creating Database {}'.format(database_name))
         influxdb_client.create_database(database_name)
+        _wait_for_database(influxdb_client, database_name)
 
 
-def _transform_gpu(gpu_num, gpu_dict, series_name, tags):
+def _transform_gpu_measurement(gpu_num, gpu_dict, series_name, tags):
     tags['GPU'] = gpu_num
-    # measurements_generator = ((key, gpu_dict[key]) for key in set(gpu_dict.keys()) - set(['timestamp']))
     return {"measurement": series_name,
             "tags": tags,
             "time": gpu_dict['timestamp'],
@@ -83,7 +42,7 @@ def _transform_gpu(gpu_num, gpu_dict, series_name, tags):
 
 @curry
 def _gpu_to_influxdb_format(series_name, tags, gpu_dict):
-    return [_transform_gpu(gpu, gpu_dict[gpu], series_name, tags) for gpu in gpu_dict]
+    return [_transform_gpu_measurement(gpu, gpu_dict[gpu], series_name, tags) for gpu in gpu_dict]
 
 
 def create_influxdb_writer(influxdb_client):
@@ -97,11 +56,12 @@ def create_influxdb_writer(influxdb_client):
     """
 
     def to_influxdf(data_list):
+        logger=_logger()
         logger.debug(data_list)
         if influxdb_client.write_points(data_list):
             logger.debug("Success")
         else:
-            logger.info("FAIL")
+            logger.warning("FAIL")
 
 
     return to_influxdf
@@ -114,9 +74,7 @@ def main(ip_or_url,
          database,
          series_name='gpu_measurements',
          debug=False,
-         nvidia_polling_interval=1,
-         polling_timeout=1,
-         polling_pause=1,
+         polling_interval=1,
          **tags):
     """ Starts GPU logger
 
@@ -139,48 +97,25 @@ def main(ip_or_url,
     influxdb_gpu_logger.py localhost 8086 username password gpudata --machine=my_gpu_machine
 
     """
+
     if bool(debug):
-        logging.getLogger().setLevel(logging.DEBUG)
-        logger.debug('Debug logging | ON')
+        logging.basicConfig(level=logging.DEBUG)
+        _logger().debug('Debug logging | ON')
 
     try:
+        logger = _logger()
         logger.info('Trying to connect to {} on port {} with {}:{}'.format(ip_or_url, port, username, password))
         client = InfluxDBClient(ip_or_url, port, username, password)
         logger.info('Connected')
 
-
         _create_database(client, database)
-
         to_db = compose(create_influxdb_writer(client),
                         _gpu_to_influxdb_format(series_name, tags))
         logger.info('Starting logging...')
-        start_record_gpu_to(to_db, polling_interval=nvidia_polling_interval)
-    except KeyboardInterrupt:
-        logger.info('Exiting')
-
-
-def test_main():
-    try:
-        # logger.info('Trying to connect to {} on port {} with {}:{}'.format(ip_or_url, port, username, password))
-        # client = InfluxDBClient(ip_or_url, port, username, password)
-        logger.info('Connected')
-
-
-        # _create_database(client, database)
-        client=None
-        series_name="gpu_measures"
-        tags={
-            'host':'test'
-        }
-        nvidia_polling_interval=1
-        to_db = compose(create_influxdb_writer(client),
-                        _gpu_to_influxdb_format(series_name, tags))
-        logger.info('Starting logging...')
-        start_record_gpu_to(to_db, polling_interval=nvidia_polling_interval)
+        start_record_gpu_to(to_db, polling_interval=polling_interval)
     except KeyboardInterrupt:
         logger.info('Exiting')
 
 
 if __name__=="__main__":
     fire.Fire(main)
-    # test_main()
