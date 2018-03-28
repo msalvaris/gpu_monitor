@@ -104,7 +104,7 @@ def main(ip_or_url,
 
     try:
         logger = _logger()
-        logger.info('Trying to connect to {} on port {} with {}:{}'.format(ip_or_url, port, username, password))
+        logger.info('Trying to connect to {} on port {} as {}'.format(ip_or_url, port, username))
         client = InfluxDBClient(ip_or_url, port, username, password)
         logger.info('Connected')
 
