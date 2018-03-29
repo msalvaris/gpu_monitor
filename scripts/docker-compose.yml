@@ -10,6 +10,8 @@ influxdb:
   volumes:
     # Data persistency
     - ${DATA_LOCATION}:/var/lib/influxdb
+  env_file:
+    -.env
 
 grafana:
   image: grafana/grafana:latest
@@ -20,6 +22,8 @@ grafana:
     - influxdb
   volumes:
     - ${DATA_LOCATION}:/var/lib/grafana
+  env_file:
+    -.env
 
 
 

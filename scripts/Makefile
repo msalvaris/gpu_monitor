@@ -20,7 +20,7 @@ stop:
 	docker-compose down
 
 remove:
-	docker-compose down --rmi
+	docker-compose down --rmi all
 
 
 .PHONY: help run stop remove delete
