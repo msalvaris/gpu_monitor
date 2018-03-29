@@ -6,19 +6,10 @@ influxdb:
     - "8086:8086"
     - "8090:8090"
   environment:
-    INFLUXDB_DB: GPU
-    INFLUXDB_USER: admin
-    INFLUXDB_USER_PASSWORD: password
     INFLUXDB_ADMIN_ENABLED: "true"
   volumes:
     # Data persistency
-    - /home/mat:/var/lib/influxdb
-
-# busybox:
-#   image: busybox:latest
-#   container_name: grafana-storage
-#   volumes:
-#     - /var/lib/grafana
+    - ${DATA_LOCATION}:/var/lib/influxdb
 
 grafana:
   image: grafana/grafana:latest
@@ -28,9 +19,7 @@ grafana:
   links:
     - influxdb
   volumes:
-    - /var/lib/grafana:/var/lib/grafana
-  environment:
-    GF_SECURITY_ADMIN_PASSWORD: password
+    - ${DATA_LOCATION}:/var/lib/grafana
 
 
 
