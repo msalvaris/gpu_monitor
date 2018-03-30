@@ -9,7 +9,8 @@ from toolz import curry, compose
 
 from gpumon.influxdb.gpu_interface import start_pushing_measurements_to
 
-MEASUREMENTS_RETENTION_DURATION= '1d'
+MEASUREMENTS_RETENTION_DURATION = '1d'
+
 
 def _logger():
     return logging.getLogger(__name__)
@@ -27,7 +28,7 @@ def _switch_to_database(influxdb_client, database_name):
 
 def _compose_measurement_dict(gpu_num, gpu_dict, series_name):
     return {"measurement": series_name,
-            "tags": {'GPU':gpu_num},
+            "tags": {'GPU': gpu_num},
             "time": gpu_dict['timestamp'],
             "fields": gpu_dict}
 
@@ -56,7 +57,7 @@ def _create_influxdb_writer(influxdb_client, tags):
                 else:
                     sleep(pause)
             except InfluxDBClientError:
-                logger.debug('Failed {} out of {}'.format(i,retries))
+                logger.debug('Failed {} out of {}'.format(i, retries))
         else:
             logger.warning("Failed to write to Database")
 
@@ -82,11 +83,12 @@ def _set_retention_policy(influxdb_client, database, retention_duration, policy_
                                                 database=database,
                                                 default=True)
 
+
 def start_logger(ip_or_url,
-                 port,
                  username,
                  password,
                  database,
+                 port=8086,
                  series_name='gpu_measurements',
                  polling_interval=1,
                  retention_duration=MEASUREMENTS_RETENTION_DURATION,
@@ -98,10 +100,10 @@ def start_logger(ip_or_url,
     Parameters
     ----------
     ip_or_url: ip or url of influxdb
-    port: A number indicating the port on which influxdb is listening
     username: Username to log into influxdb database
     password: Password to log into influxdb database
     database: Name of database to log data to. It will create the database if one doesn't exist
+    port: A number indicating the port on which influxdb is listening
     series_name: Name of series/table to log data to
     tags: One or more tags to apply to the data. These can then be used to group or select timeseries
           Example: --machine my_machine --cluster kerb01
@@ -123,33 +125,34 @@ def start_logger(ip_or_url,
     return start_pushing_measurements_to(to_db, polling_interval=polling_interval)
 
 
-def _run_logger_process(ip_or_url,
-                        port,
-                        username,
-                        password,
-                        database,
-                        series_name='gpu_measurements',
-                        polling_interval=1,
-                        retention_duration=MEASUREMENTS_RETENTION_DURATION,
-                        **tags):
+def _start_logger_process(ip_or_url,
+                          port,
+                          username,
+                          password,
+                          database,
+                          series_name='gpu_measurements',
+                          polling_interval=1,
+                          retention_duration=MEASUREMENTS_RETENTION_DURATION,
+                          **tags):
     t, stop_logging = start_logger(ip_or_url,
-                                   port,
                                    username,
                                    password,
                                    database,
+                                   port=port,
                                    series_name=series_name,
                                    polling_interval=polling_interval,
                                    retention_duration=retention_duration,
                                    **tags)
     t.join()
 
+
 @contextmanager
 def log_context(ip_or_url,
-                port,
                 username,
                 password,
                 database,
                 series_name,
+                port=8086,
                 polling_interval=1,
                 retention_duration=MEASUREMENTS_RETENTION_DURATION,
                 **tags):
@@ -158,9 +161,9 @@ def log_context(ip_or_url,
 
     kwargs = {'series_name': series_name,
               'polling_interval': polling_interval,
-              'retention_duration':retention_duration}
+              'retention_duration': retention_duration}
     kwargs.update(tags)
-    p = Process(target=_run_logger_process,
+    p = Process(target=_start_logger_process,
                 args=(ip_or_url,
                       port,
                       username,
