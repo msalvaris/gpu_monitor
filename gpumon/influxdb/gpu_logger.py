@@ -123,6 +123,26 @@ def start_logger(ip_or_url,
     return start_pushing_measurements_to(to_db, polling_interval=polling_interval)
 
 
+def _run_logger_process(ip_or_url,
+                        port,
+                        username,
+                        password,
+                        database,
+                        series_name='gpu_measurements',
+                        polling_interval=1,
+                        retention_duration=MEASUREMENTS_RETENTION_DURATION,
+                        **tags):
+    t, stop_logging = start_logger(ip_or_url,
+                                   port,
+                                   username,
+                                   password,
+                                   database,
+                                   series_name=series_name,
+                                   polling_interval=polling_interval,
+                                   retention_duration=retention_duration,
+                                   **tags)
+    t.join()
+
 @contextmanager
 def log_context(ip_or_url,
                 port,
@@ -130,7 +150,6 @@ def log_context(ip_or_url,
                 password,
                 database,
                 series_name,
-                debug=False,
                 polling_interval=1,
                 retention_duration=MEASUREMENTS_RETENTION_DURATION,
                 **tags):
@@ -138,11 +157,10 @@ def log_context(ip_or_url,
     logger.info('Logging GPU to Database {}'.format(ip_or_url))
 
     kwargs = {'series_name': series_name,
-              'debug': debug,
               'polling_interval': polling_interval,
               'retention_duration':retention_duration}
     kwargs.update(tags)
-    p = Process(target=start_logger,
+    p = Process(target=_run_logger_process,
                 args=(ip_or_url,
                       port,
                       username,
