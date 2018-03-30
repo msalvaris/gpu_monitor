@@ -140,7 +140,8 @@ def log_context(ip_or_url,
     kwargs = {'series_name': series_name,
               'debug': debug,
               'polling_interval': polling_interval,
-              'retention_duration':retention_duration}.update(tags)
+              'retention_duration':retention_duration}
+    kwargs.update(tags)
     p = Process(target=start_logger,
                 args=(ip_or_url,
                       port,
