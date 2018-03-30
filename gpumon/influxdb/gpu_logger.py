@@ -9,43 +9,32 @@ from toolz import curry, compose
 
 from gpumon.influxdb.gpu_interface import start_pushing_measurements_to
 
+MEASUREMENTS_RETENTION_DURATION= '1d'
 
 def _logger():
     return logging.getLogger(__name__)
 
 
-def _wait_for_database(influxdb_client, database_name):
-    dbs = influxdb_client.get_list_database()
-    logger = _logger()
-    logger.debug(str(dbs))
-    while database_name not in [db['name'] for db in dbs]:
-        logger.info('Waiting for database {} to be created....')
-        logger.debug(str(dbs))
-        sleep(5)
-
-
-def _create_database(influxdb_client, database_name):
+def _switch_to_database(influxdb_client, database_name):
     dbs = influxdb_client.get_list_database()
     if database_name in [db['name'] for db in dbs]:
         _logger().info('Database {} exists'.format(database_name))
     else:
         _logger().info('Creating Database {}'.format(database_name))
         influxdb_client.create_database(database_name)
-        # _wait_for_database(influxdb_client, database_name)
     influxdb_client.switch_database(database_name)
 
 
-def _transform_gpu_measurement(gpu_num, gpu_dict, series_name, tags):
-    tags['GPU'] = gpu_num
+def _compose_measurement_dict(gpu_num, gpu_dict, series_name):
     return {"measurement": series_name,
-            "tags": tags,
+            "tags": {'GPU':gpu_num},
             "time": gpu_dict['timestamp'],
             "fields": gpu_dict}
 
 
 @curry
-def _gpu_to_influxdb_format(series_name, tags, gpu_dict):
-    return [_transform_gpu_measurement(gpu, gpu_dict[gpu], series_name, tags) for gpu in gpu_dict]
+def _gpu_to_influxdb_format(series_name, gpu_dict):
+    return [_compose_measurement_dict(gpu, gpu_dict[gpu], series_name) for gpu in gpu_dict]
 
 
 def _create_influxdb_writer(influxdb_client):
@@ -56,12 +45,12 @@ def _create_influxdb_writer(influxdb_client):
     influxdb_client:
     """
 
-    def to_influxdf(data_list, retries=5, pause=5):
+    def to_influxdf(data_list, tags, retries=5, pause=5):
         logger = _logger()
         logger.debug(data_list)
         for i in range(retries):
             try:
-                if influxdb_client.write_points(data_list):
+                if influxdb_client.write_points(data_list, tags=tags):
                     logger.debug("Success")
                     break
                 else:
@@ -81,6 +70,7 @@ def start_logger(ip_or_url,
                  database,
                  series_name='gpu_measurements',
                  polling_interval=1,
+                 retention_duration=MEASUREMENTS_RETENTION_DURATION,
                  **tags):
     """ Starts GPU logger
 
@@ -104,7 +94,12 @@ def start_logger(ip_or_url,
     client = InfluxDBClient(ip_or_url, port, username, password)
     logger.info('Connected')
 
-    _create_database(client, database)
+    _switch_to_database(client, database)
+    logger.info('Measurement retention duration {}'.format(retention_duration))
+    client.alter_retention_policy('default',
+                                  database=database,
+                                  duration=retention_duration,
+                                  default=True)
     to_db = compose(_create_influxdb_writer(client),
                     _gpu_to_influxdb_format(series_name, tags))
     logger.info('Starting logging...')
@@ -119,14 +114,16 @@ def log_context(ip_or_url,
                 database,
                 series_name,
                 debug=False,
-                polling_interval=5,
+                polling_interval=1,
+                retention_duration=MEASUREMENTS_RETENTION_DURATION,
                 **tags):
     logger = _logger()
     logger.info('Logging GPU to Database {}'.format(ip_or_url))
 
     kwargs = {'series_name': series_name,
               'debug': debug,
-              'polling_interval': polling_interval}.update(tags)
+              'polling_interval': polling_interval,
+              'retention_duration':retention_duration}.update(tags)
     p = Process(target=start_logger,
                 args=(ip_or_url,
                       port,
