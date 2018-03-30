@@ -22,5 +22,9 @@ stop:
 remove:
 	docker-compose down --rmi all
 
+clean: remove
+	grafana=$(dotenv get GRAFANA_DATA_LOCATION| cut -d '=' -f 2)
+	influxdb=$(dotenv get INFLUXDB_DATA_LOCATION| cut -d '=' -f 2)
+	echo grafana
 
 .PHONY: help run stop remove delete
