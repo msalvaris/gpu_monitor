@@ -28,12 +28,11 @@ def _create_database(influxdb_client, database_name):
     dbs = influxdb_client.get_list_database()
     if database_name in [db['name'] for db in dbs]:
         _logger().info('Database {} exists'.format(database_name))
-        influxdb_client.switch_database(database_name)
     else:
         _logger().info('Creating Database {}'.format(database_name))
         influxdb_client.create_database(database_name)
-        _wait_for_database(influxdb_client, database_name)
-        influxdb_client.switch_database(database_name)
+        # _wait_for_database(influxdb_client, database_name)
+    influxdb_client.switch_database(database_name)
 
 
 def _transform_gpu_measurement(gpu_num, gpu_dict, series_name, tags):
