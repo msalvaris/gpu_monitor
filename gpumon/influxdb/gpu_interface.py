@@ -25,13 +25,13 @@ def pynvml_context():
     pynvml.nvmlShutdown()
 
 def device_count():
-    with pynvml_context:
+    with pynvml_context():
         deviceCount = device_count_for()
         return deviceCount
 
 
 def device_name():
-    with pynvml_context:
+    with pynvml_context():
         device_name = device_name_for(pynvml.nvmlDeviceGetHandleByIndex(0))
         return device_name
 
