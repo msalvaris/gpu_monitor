@@ -37,7 +37,7 @@ def _gpu_to_influxdb_format(series_name, gpu_dict):
     return [_compose_measurement_dict(gpu, gpu_dict[gpu], series_name) for gpu in gpu_dict]
 
 
-def _create_influxdb_writer(influxdb_client):
+def _create_influxdb_writer(influxdb_client, tags):
     """ Returns function which writes to influxdb
 
     Parameters
@@ -45,7 +45,7 @@ def _create_influxdb_writer(influxdb_client):
     influxdb_client:
     """
 
-    def to_influxdf(data_list, tags, retries=5, pause=5):
+    def to_influxdf(data_list, retries=5, pause=5):
         logger = _logger()
         logger.debug(data_list)
         for i in range(retries):
@@ -101,8 +101,8 @@ def start_logger(ip_or_url,
     #                               duration=retention_duration,
     #                               default=True)
     logger.info(client.get_list_retention_policies(database=database))
-    to_db = compose(_create_influxdb_writer(client),
-                    _gpu_to_influxdb_format(series_name, tags))
+    to_db = compose(_create_influxdb_writer(client, tags=tags),
+                    _gpu_to_influxdb_format(series_name))
     logger.info('Starting logging...')
     return start_pushing_measurements_to(to_db, polling_interval=polling_interval)
 
