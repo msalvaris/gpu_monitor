@@ -1,12 +1,12 @@
 import logging
-logging.basicConfig(level=logging.INFO)
-
+from contextlib import contextmanager
+from multiprocessing import Process
 from time import sleep
 
-import fire
-from gpumon.influxdb.gpu_interface import start_pushing_measurements_to
 from influxdb import InfluxDBClient
 from toolz import curry, compose
+
+from gpumon.influxdb.gpu_interface import start_pushing_measurements_to
 
 
 def _logger():
@@ -45,41 +45,36 @@ def _gpu_to_influxdb_format(series_name, tags, gpu_dict):
     return [_transform_gpu_measurement(gpu, gpu_dict[gpu], series_name, tags) for gpu in gpu_dict]
 
 
-def create_influxdb_writer(influxdb_client):
+def _create_influxdb_writer(influxdb_client):
     """ Returns function which writes to influxdb
 
     Parameters
     ----------
     influxdb_client:
-    series_name: (str)
-    tags: Extra tags to be added to the measurements
     """
 
     def to_influxdf(data_list):
-        logger=_logger()
+        logger = _logger()
         logger.debug(data_list)
         if influxdb_client.write_points(data_list):
             logger.debug("Success")
         else:
             logger.warning("FAIL")
 
-
     return to_influxdf
 
 
-def main(ip_or_url,
-         port,
-         username,
-         password,
-         database,
-         series_name='gpu_measurements',
-         debug=False,
-         polling_interval=1,
-         **tags):
+def start_logger(ip_or_url,
+                 port,
+                 username,
+                 password,
+                 database,
+                 series_name='gpu_measurements',
+                 polling_interval=1,
+                 **tags):
     """ Starts GPU logger
 
-    Logs GPU measurements form nvidia-smi to an influxdb database
-
+    Logs GPU measurements to an influxdb database
 
     Parameters
     ----------
@@ -92,30 +87,44 @@ def main(ip_or_url,
     tags: One or more tags to apply to the data. These can then be used to group or select timeseries
           Example: --machine my_machine --cluster kerb01
 
-    Example
-    -------
-    influxdb_gpu_logger.py localhost 8086 username password gpudata --machine=my_gpu_machine
-
     """
 
-    if bool(debug):
-        logging.basicConfig(level=logging.DEBUG)
-        _logger().debug('Debug logging | ON')
+    logger = _logger()
+    logger.info('Trying to connect to {} on port {} as {}'.format(ip_or_url, port, username))
+    client = InfluxDBClient(ip_or_url, port, username, password)
+    logger.info('Connected')
 
-    try:
-        logger = _logger()
-        logger.info('Trying to connect to {} on port {} as {}'.format(ip_or_url, port, username))
-        client = InfluxDBClient(ip_or_url, port, username, password)
-        logger.info('Connected')
-
-        _create_database(client, database)
-        to_db = compose(create_influxdb_writer(client),
-                        _gpu_to_influxdb_format(series_name, tags))
-        logger.info('Starting logging...')
-        start_pushing_measurements_to(to_db, polling_interval=polling_interval)
-    except KeyboardInterrupt:
-        logger.info('Exiting')
+    _create_database(client, database)
+    to_db = compose(_create_influxdb_writer(client),
+                    _gpu_to_influxdb_format(series_name, tags))
+    logger.info('Starting logging...')
+    return start_pushing_measurements_to(to_db, polling_interval=polling_interval)
 
 
-if __name__=="__main__":
-    fire.Fire(main)
+@contextmanager
+def log_context(ip_or_url,
+                port,
+                username,
+                password,
+                database,
+                series_name,
+                debug=False,
+                polling_interval=5,
+                **tags):
+    logger = _logger()
+    logger.info('Logging GPU to Database {}'.format(ip_or_url))
+
+    kwargs = {'series_name': series_name,
+              'debug': debug,
+              'polling_interval': polling_interval}.update(tags)
+    p = Process(target=start_logger,
+                args=(ip_or_url,
+                      port,
+                      username,
+                      password,
+                      database),
+                kwargs=kwargs)
+    p.start()
+    yield p
+    p.terminate()
+    p.join()
