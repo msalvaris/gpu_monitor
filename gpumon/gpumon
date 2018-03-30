@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 import logging
-logging.basicConfig(level=logging.INFO)
+
 import fire
 
 from gpumon.influxdb.gpu_logger import start_logger
+
 
 def _logger():
     return logging.getLogger(__name__)
@@ -40,9 +41,12 @@ def main(ip_or_url,
        gpumon localhost 8086 username password gpudata --machine=my_gpu_machine
 
        """
+    logging.warning(debug)
     if bool(debug):
         logging.basicConfig(level=logging.DEBUG)
         _logger().debug('Debug logging | ON')
+    else:
+        logging.basicConfig(level=logging.INFO)
 
     try:
         t, stop_logging = start_logger(ip_or_url,
@@ -50,8 +54,8 @@ def main(ip_or_url,
                                        username,
                                        password,
                                        database,
-                                       series_name='gpu_measurements',
-                                       polling_interval=1,
+                                       series_name=series_name,
+                                       polling_interval=polling_interval,
                                        **tags)
         t.join()
 
