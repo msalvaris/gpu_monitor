@@ -98,7 +98,7 @@ def start_logger(ip_or_url,
     logger.info('Measurement retention duration {}'.format(retention_duration))
     client.create_retention_policy('standard',
                                    retention_duration,
-                                   0,
+                                   1,
                                   database=database,
                                   default=True)
 
