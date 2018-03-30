@@ -4,6 +4,7 @@ from multiprocessing import Process
 from time import sleep
 
 from influxdb import InfluxDBClient
+from influxdb.exceptions import InfluxDBClientError
 from toolz import curry, compose
 
 from gpumon.influxdb.gpu_interface import start_pushing_measurements_to
@@ -55,13 +56,20 @@ def _create_influxdb_writer(influxdb_client):
     influxdb_client:
     """
 
-    def to_influxdf(data_list):
+    def to_influxdf(data_list, retries=5, pause=5):
         logger = _logger()
         logger.debug(data_list)
-        if influxdb_client.write_points(data_list):
-            logger.debug("Success")
+        for i in range(retries):
+            try:
+                if influxdb_client.write_points(data_list):
+                    logger.debug("Success")
+                    break
+                else:
+                    sleep(pause)
+            except InfluxDBClientError:
+                logger.debug('Failed {} out of {}'.format(i,retries))
         else:
-            logger.warning("FAIL")
+            logger.warning("Failed to write to Database")
 
     return to_influxdf
 
