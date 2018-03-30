@@ -16,8 +16,10 @@ def _logger():
 def _wait_for_database(influxdb_client, database_name):
     dbs = influxdb_client.get_list_database()
     logger = _logger()
+    logger.debug(str(dbs))
     while database_name not in [db['name'] for db in dbs]:
         logger.info('Waiting for database {} to be created....')
+        logger.debug(str(dbs))
         sleep(5)
 
 
