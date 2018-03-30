@@ -41,7 +41,7 @@ def main(ip_or_url,
        gpumon localhost 8086 username password gpudata --machine=my_gpu_machine
 
        """
-    logging.info(debug)
+    _logger().info(debug)
     if bool(debug):
         logging.basicConfig(level=logging.DEBUG)
         _logger().debug('Debug logging | ON')
