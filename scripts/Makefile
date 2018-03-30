@@ -6,6 +6,8 @@ Usage:
 	make help                           show this message
 	make run							start influx container and grafana container
 	make stop							stop all containers
+	make remove							remove all containers
+	make clean							delete grafana and influxdb data
 endef
 export PROJECT_HELP_MSG
 
@@ -22,9 +24,12 @@ stop:
 remove:
 	docker-compose down --rmi all
 
-clean: remove
-	grafana=$(dotenv get GRAFANA_DATA_LOCATION| cut -d '=' -f 2)
-	influxdb=$(dotenv get INFLUXDB_DATA_LOCATION| cut -d '=' -f 2)
-	echo grafana
+clean:
+	$(eval grafana:=$(shell dotenv get GRAFANA_DATA_LOCATION| cut -d '=' -f 2))
+	$(eval influxdb:=$(shell dotenv get INFLUXDB_DATA_LOCATION| cut -d '=' -f 2))
+	@echo "Deleting $(grafana)"
+	@rm -rf $(grafana)
+	@echo "Deleting $(influxdb)"
+	@rm -rf $(influxdb)
 
-.PHONY: help run stop remove delete
+.PHONY: help run stop remove clean
