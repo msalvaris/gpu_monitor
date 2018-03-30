@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from concurrent.futures import CancelledError
+from contextlib import contextmanager
 from datetime import datetime
 from threading import Thread
 
@@ -17,19 +18,22 @@ def nativestr(s):
         return s
     return s.decode('utf-8', 'replace')
 
+@contextmanager
+def pynvml_context():
+    pynvml.nvmlInit()
+    yield
+    pynvml.nvmlShutdown()
 
 def device_count():
-    pynvml.nvmlInit()
-    deviceCount = device_count_for()
-    pynvml.nvmlShutdown()
-    return deviceCount
+    with pynvml_context:
+        deviceCount = device_count_for()
+        return deviceCount
 
 
 def device_name():
-    pynvml.nvmlInit()
-    device_name = device_name_for(pynvml.nvmlDeviceGetHandleByIndex(0))
-    pynvml.nvmlShutdown()
-    return device_name
+    with pynvml_context:
+        device_name = device_name_for(pynvml.nvmlDeviceGetHandleByIndex(0))
+        return device_name
 
 
 def device_count_for():
@@ -145,18 +149,3 @@ def start_pushing_measurements_to(output_function, polling_interval=1):
         task.cancel()
 
     return t, stop_logging
-
-
-def main():
-    try:
-        t, stop_logging = start_pushing_measurements_to(print)
-        t.join()
-    except KeyboardInterrupt:
-        logger = _logger()
-        logger.info("Cancelling")
-        logger.info("Waiting for GPU call to finish....")
-        stop_logging()
-
-
-if __name__ == "__main__":
-    main()
