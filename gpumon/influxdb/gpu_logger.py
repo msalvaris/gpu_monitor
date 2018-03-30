@@ -96,10 +96,11 @@ def start_logger(ip_or_url,
 
     _switch_to_database(client, database)
     logger.info('Measurement retention duration {}'.format(retention_duration))
-    client.alter_retention_policy('default',
-                                  database=database,
-                                  duration=retention_duration,
-                                  default=True)
+    # client.create_retention_policy('default',
+    #                               database=database,
+    #                               duration=retention_duration,
+    #                               default=True)
+    logger.info(client.get_list_retention_policies(database=database))
     to_db = compose(_create_influxdb_writer(client),
                     _gpu_to_influxdb_format(series_name, tags))
     logger.info('Starting logging...')
