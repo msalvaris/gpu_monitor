@@ -17,6 +17,28 @@ def nativestr(s):
         return s
     return s.decode('utf-8', 'replace')
 
+
+def device_count():
+    pynvml.nvmlInit()
+    deviceCount = device_count_for()
+    pynvml.nvmlShutdown()
+    return deviceCount
+
+
+def device_name():
+    pynvml.nvmlInit()
+    device_name = device_name_for(pynvml.nvmlDeviceGetHandleByIndex(0))
+    pynvml.nvmlShutdown()
+    return device_name
+
+
+def device_count_for():
+    try:
+        return pynvml.nvmlDeviceGetCount()
+    except pynvml.NVMlError:
+        return None
+
+
 def device_name_for(device_handle):
     """Get GPU device name"""
     try:
@@ -63,13 +85,14 @@ def temperature_for(device_handle):
         return None
 
 
-_MEASUREMENTS_FUNCS ={
+_MEASUREMENTS_FUNCS = {
     "Memory": mem_for,
     "Utilization": utilization_for,
     "Memory Utilization": mem_utilization_for,
     "Power": power_for,
     "Temperature": temperature_for,
 }
+
 
 def measurements_for(gpu_handle):
     mes_dict = {k: func(gpu_handle) for k, func in _MEASUREMENTS_FUNCS.items()}
@@ -80,7 +103,7 @@ def measurements_for(gpu_handle):
 async def aggregate_measurements(device_count):
     measures_for_device = compose(measurements_for,
                                   pynvml.nvmlDeviceGetHandleByIndex)
-    return {i:measures_for_device(i) for i in range(device_count)}
+    return {i: measures_for_device(i) for i in range(device_count)}
 
 
 async def record_measurements_to(async_reporting_func, polling_interval=1):
@@ -97,6 +120,7 @@ async def record_measurements_to(async_reporting_func, polling_interval=1):
 def async_function_from(output_function):
     async def async_output_function(measurement):
         output_function(measurement)
+
     return async_output_function
 
 
@@ -134,5 +158,5 @@ def main():
         stop_logging()
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()

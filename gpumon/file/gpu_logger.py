@@ -85,10 +85,24 @@ class Logger(object):
     def __call__(self):
         return parse_log(self._log_file)
 
-    def plot(self, gpu_property='sm', num_gpus=1, plot_width=600, plot_height=400, y_range=(0, 110)):
+    def plot(self, gpu_measurement='sm', num_gpus=1, plot_width=600, plot_height=400, y_range=(0, 110)):
+        """ Plot the specified GPU measurement
+
+        Parameters
+        ----------
+        gpu_measurement: GPU measurement to plot possible values
+        num_gpus: Number of GPUs to plot ['pwr', 'temp', 'sm', 'mem', 'enc', 'dec', 'mclk', 'pclk']
+        plot_width:
+        plot_height:
+        y_range:
+
+        Returns
+        -------
+        Bokeh Figure
+        """
         df = pipe(self._log_file,
                   parse_log,
-                  extract(gpu_property))
+                  extract(gpu_measurement))
         return plot(df,
                     num_gpus=num_gpus,
                     plot_width=plot_width,
