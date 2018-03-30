@@ -63,6 +63,25 @@ def _create_influxdb_writer(influxdb_client, tags):
     return to_influxdf
 
 
+def _set_retention_policy(influxdb_client, database, retention_duration, policy_name='standard'):
+    retention_policies = influxdb_client.get_list_retention_policies(database=database)
+
+    for policy in retention_policies:
+        if policy['name'] == policy_name:
+            _logger().debug('Found policy {}:{}'.format(policy_name, str(policy)))
+            influxdb_client.alter_retention_policy(policy_name,
+                                                   database=database,
+                                                   duration=retention_duration,
+                                                   default=True)
+            break
+    else:
+        _logger().debug('Creating policy {}'.format(policy_name))
+        influxdb_client.create_retention_policy(policy_name,
+                                                retention_duration,
+                                                1,
+                                                database=database,
+                                                default=True)
+
 def start_logger(ip_or_url,
                  port,
                  username,
@@ -96,13 +115,8 @@ def start_logger(ip_or_url,
 
     _switch_to_database(client, database)
     logger.info('Measurement retention duration {}'.format(retention_duration))
-    client.create_retention_policy('standard',
-                                   retention_duration,
-                                   1,
-                                  database=database,
-                                  default=True)
+    _set_retention_policy(client, database, retention_duration)
 
-    logger.info(client.get_list_retention_policies(database=database))
     to_db = compose(_create_influxdb_writer(client, tags=tags),
                     _gpu_to_influxdb_format(series_name))
     logger.info('Starting logging...')
