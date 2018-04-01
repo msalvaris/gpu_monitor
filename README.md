@@ -1,5 +1,9 @@
 # GPU Monitor
-This is a library and script for monitoring GPUs on a single machine and across a cluster. You can use it to record various GPU measurements during a specific period using the context based logger or continuously. The context logger can either record to a file which can be read back into a dataframe or to an influxdb database. The influxdb database can then be accessed using the python influxdb client or can be viewed in realtime using dashboards such as Grafana
+This is a library and script for monitoring GPUs on a single machine and across a cluster. You can use it to record various GPU measurements during a specific period using the context based logger or continuously using the gpumon command. The context logger can either record to a file which can be read back into a dataframe or to an influxdb database. Data from the influxdb database can then be accessed using the python influxdb client or can be viewed in realtime using dashboards such as Grafana. Examples created in Juypyter notebooks can be found [here]()
+
+
+Here is the example output using the influxdb log context with a Grafana dashboard
+![GPU DashBoard](static/gpu_dashboard.gif "Grafana GPU Dashboard")
 
 
 ## Installation
@@ -19,9 +23,9 @@ For now I recommend the -e flag since it is in active development and
 will be easy to update by pulling the latest changes from the repo.
 
 ## Usage
-Example of running gpu monitor in Jupyter notebook
+### Running gpu monitor in Jupyter notebook with file based log context
 ```python
-from gpumon import log_context
+from gpumon.file import log_context
 from bokeh.io import output_notebook, show
 
 output_notebook()# Without this the plot won't show in Jupyter notebook
@@ -33,3 +37,54 @@ show(log.plot())# Will plot the utilisation during the context
 
 log()# Will return dataframe with all the logged properties
 ```
+[Click here to see the example notebook]()
+
+###Running gpu monitor in Jupyter notebook with InfluxDB based log context
+To do this you need to set up an InfluxDB database and Grafana. There are many ways to install and run InfluxDB and Grafana in this example we will be using Docker containers and docker-compose.
+
+If you haven't got docker-compose installed run the following
+```bash
+
+```
+You must be also be able to execute the docker commands without the requirement of sudo. To do this in Ubuntu execute the following
+```bash
+
+```
+
+Download this folder
+In there should be three files
+The file example.env contains the following variables
+INFLUXDB_DB=gpudb
+INFLUXDB_USER=admin
+INFLUXDB_USER_PASSWORD=password
+INFLUXDB_ADMIN_ENABLED=true
+GF_SECURITY_ADMIN_PASSWORD=password
+GRAFANA_DATA_LOCATION=/tmp/grafana
+INFLUXDB_DATA_LOCATION=/tmp/influxdb
+
+Please change them to appropriate values. The data location entries will tell Grafana and InfluxDB where to store their data so that when the containers are destroyed the data remains
+Once you have edited it rename example.env to .env
+
+Now inside the folder that contains the file you can run
+```bash
+make help
+```
+To give you details on the various commands
+To start InfluxDB and Grafana you should run
+
+```bash
+make run
+```
+
+Now in your Jupyter notebook simply add these lines
+```python
+from gpumon.influxdb import log_context
+
+with log_context('localhost', 'admin', 'password', 'gpudb', 'gpuseries'):
+	# GPU Code
+
+```
+
+Make sure you replace the values in the call to the log_context with the appropriate values.
+gpudata is the name of the database and gpuseries is the name we have given to our series feel free to replace these.
+If the database name given in the context isn't the same as the one supplied in the .env file a new database will be created.
