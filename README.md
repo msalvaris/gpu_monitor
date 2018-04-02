@@ -8,8 +8,6 @@ Here is the example output using the influxdb log context with a Grafana dashboa
   <img src="static/gpu_dashboard.gif" alt="Grafana GPU Dashboard"/>
 </p>
 
-[comment]: <> ![GPU DashBoard](static/gpu_dashboard.gif "Grafana GPU Dashboard")
-
 
 ## Installation
 
