@@ -18,11 +18,13 @@ def nativestr(s):
         return s
     return s.decode('utf-8', 'replace')
 
+
 @contextmanager
 def pynvml_context():
     pynvml.nvmlInit()
     yield
     pynvml.nvmlShutdown()
+
 
 def device_count():
     with pynvml_context():
@@ -51,7 +53,15 @@ def device_name_for(device_handle):
         return "NVIDIA"
 
 
-def mem_for(device_handle):
+def mem_used_for(device_handle):
+    """Get GPU device memory consumption in percent"""
+    try:
+        return pynvml.nvmlDeviceGetMemoryInfo(device_handle).used
+    except pynvml.NVMLError:
+        return None
+
+
+def mem_used_percent_for(device_handle):
     """Get GPU device memory consumption in percent"""
     try:
         memory_info = pynvml.nvmlDeviceGetMemoryInfo(device_handle)
@@ -61,7 +71,9 @@ def mem_for(device_handle):
 
 
 def utilization_for(device_handle):
-    """Get GPU device consumption in percent"""
+    """Get GPU device consumption in percent
+        Percent of time over the past sample period during which one or more kernels was executing on the GPU.
+    """
     try:
         return pynvml.nvmlDeviceGetUtilizationRates(device_handle).gpu
     except pynvml.NVMLError:
@@ -69,6 +81,9 @@ def utilization_for(device_handle):
 
 
 def mem_utilization_for(device_handle):
+    """
+        Percent of time over the past sample period during which global (device) memory was being read or written.
+    """
     try:
         return pynvml.nvmlDeviceGetUtilizationRates(device_handle).memory
     except pynvml.NVMLError:
@@ -90,7 +105,8 @@ def temperature_for(device_handle):
 
 
 _MEASUREMENTS_FUNCS = {
-    "Memory": mem_for,
+    "Memory Used": mem_used_for,
+    "Memory Used Percent": mem_used_percent_for,
     "Utilization": utilization_for,
     "Memory Utilization": mem_utilization_for,
     "Power": power_for,
