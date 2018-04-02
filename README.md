@@ -3,7 +3,12 @@ This is a library and script for monitoring GPUs on a single machine and across 
 
 
 Here is the example output using the influxdb log context with a Grafana dashboard
-![GPU DashBoard](static/gpu_dashboard.gif "Grafana GPU Dashboard")
+
+<p align="center">
+  <img src="static/gpu_dashboard.gif" alt="Grafana GPU Dashboard"/>
+</p>
+
+[comment]: <> ![GPU DashBoard](static/gpu_dashboard.gif "Grafana GPU Dashboard")
 
 
 ## Installation
