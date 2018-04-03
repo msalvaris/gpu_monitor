@@ -120,13 +120,14 @@ def start_logger(ip_or_url,
     logger.info('Trying to connect to {} on port {} as {}'.format(ip_or_url, port, username))
     try:
         client = InfluxDBClient(ip_or_url, port, username, password)
+        response = client.ping()
     except TimeoutError:
         logger.warning('Could not connect to InfluxDB. GPU metrics NOT being recorded')
         raise MetricsRecordingFailed()
 
-    logger.info('Connected')
-
+    logger.info('Connected | version {}'.format(response))
     _switch_to_database(client, database)
+
     logger.info('Measurement retention duration {}'.format(retention_duration))
     _set_retention_policy(client, database, retention_duration)
 
