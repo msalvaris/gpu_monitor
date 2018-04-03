@@ -99,11 +99,23 @@ If the database name given in the context isn't the same as the one supplied in 
 to use the context logger
 
 If you want to use the CLI version run the following command
-
+```bash
+gpumon localhost admin password gpudb --series_name=gpuseries
+```
+The above command will connect to the influxdb database running on localhost with 
+user=admin
+password=password
+database=gpudb
+series_name=gpuseries
 
 Now GPU information should be flowing to your database. You will also need to set up your Grafana dashboard.
-To do that log in to Grafana by pointing a browser to the ip of your VM or computer on port 3000. If you are executing on a VM make sure that port is open
+To do that log in to Grafana by pointing a browser to the IP of your VM or computer on port 3000. If you are executing on a VM make sure that port is open  
 Once there log in with the credentials you specified in your .env file.
 
 You will need to set up the data source. Below is a screen shot of the datasource 
 
+<p align="center">
+  <img src="static/influxdb_config.png" alt="Datasource config"/>
+</p>
+
+Once that is set up you will need to also set up your dashboard. The dashboard shown in the gif above can be found [here](dashboards/GPUDashboard.json)
