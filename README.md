@@ -52,9 +52,9 @@ log()# Will return dataframe with all the logged properties
 To do this you need to set up and [install InfluxDB](https://docs.influxdata.com/influxdb/v1.5/introduction/installation/) and [Grafana](http://docs.grafana.org/installation/). 
 There are many ways to install and run InfluxDB and Grafana in this example we will be using Docker containers and docker-compose.
 
-If you haven't got docker-compose installed run look [here](https://docs.docker.com/compose/install/)
+If you haven't got docker-compose installed see [here for instructions](https://docs.docker.com/compose/install/)
 
-You must be also be able to execute the docker commands without the requirement of sudo. To do this in Ubuntu execute the following
+You must be also be able to execute the docker commands without the requirement of sudo. To do this in Ubuntu execute the following:
 ```bash
 sudo groupadd docker
 sudo usermod -aG docker $USER
@@ -70,8 +70,8 @@ GF_SECURITY_ADMIN_PASSWORD=password
 GRAFANA_DATA_LOCATION=/tmp/grafana  
 INFLUXDB_DATA_LOCATION=/tmp/influxdb  
 
-Please change them to appropriate values. The data location entries will tell Grafana and InfluxDB where to store their data so that when the containers are destroyed the data remains.  
-Once you have edited it rename *example.env* to *.env* 
+Please change them to appropriate values. The data location entries (GRAFANA_DATA_LOCATION, INFLUXDB_DATA_LOCATION) will tell Grafana and InfluxDB where to store their data so that when the containers are destroyed the data remains.  
+Once you have edited it rename *example.env* to *.env*.
 
 Now inside the folder that contains the file you can run the command below and it will give you the various commands you can execute.
 ```bash
@@ -91,8 +91,8 @@ with log_context('localhost', 'admin', 'password', 'gpudb', 'gpuseries'):
 	# GPU Code
 
 ```
-Make sure you replace the values in the call to the log_context with the appropriate values.
-*gpudata* is the name of the database and *gpuseries* is the name we have given to our series feel free to replace these.
+Make sure you replace the values in the call to the log_context with the appropriate values.  
+*gpudata* is the name of the database and *gpuseries* is the name we have given to our series, feel free to change these.
 If the database name given in the context isn't the same as the one supplied in the .env file a new database will be created.  
 Have a look at [this notebook](examples/notebooks/InfluxDBLoggerExample.ipynb) for a full example.  
 
@@ -103,13 +103,14 @@ gpumon localhost admin password gpudb --series_name=gpuseries
 ```
 
 The above command will connect to the influxdb database running on localhost with   
-user=admin
-password=password
-database=gpudb
-series_name=gpuseries
+user=admin  
+password=password  
+database=gpudb  
+series_name=gpuseries  
 
-Now GPU information should be flowing to your database. You will also need to set up your Grafana dashboard.  
-To do that log in to Grafana by pointing a browser to the IP of your VM or computer on port 3000. *If you are executing on a VM make sure that port is open*.  
+#### Setting up Grafana dashboard
+If everything went well above GPU metrics should be flowing to your database. 
+To set up your Grafana dashbaord log in to Grafana by pointing a browser to the IP of your VM or computer on port 3000. *If you are executing on a VM make sure that port is open*.  
 Once there log in with the credentials you specified in your .env file.
 
 You will need to set up the data source. Below is an example screen-shot of the datasource config
