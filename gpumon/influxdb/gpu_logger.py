@@ -5,6 +5,7 @@ from time import sleep
 
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
+from requests.exceptions import ConnectionError
 from toolz import curry, compose
 
 from gpumon.influxdb.gpu_interface import start_pushing_measurements_to
@@ -121,7 +122,7 @@ def start_logger(ip_or_url,
     try:
         client = InfluxDBClient(ip_or_url, port, username, password)
         response = client.ping()
-    except TimeoutError:
+    except ConnectionError:
         logger.warning('Could not connect to InfluxDB. GPU metrics NOT being recorded')
         raise MetricsRecordingFailed()
 
