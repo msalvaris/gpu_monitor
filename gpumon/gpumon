@@ -12,10 +12,10 @@ def _logger():
 
 
 def main(ip_or_url,
-         port,
          username,
          password,
          database,
+         port=8086,
          series_name='gpu_measurements',
          polling_interval=1,
          debug=False,
@@ -29,10 +29,10 @@ def main(ip_or_url,
        Parameters
        ----------
        ip_or_url: ip or url of influxdb
-       port: A number indicating the port on which influxdb is listening
        username: Username to log into influxdb database
        password: Password to log into influxdb database
        database: Name of database to log data to. It will create the database if one doesn't exist
+       port: A number indicating the port on which influxdb is listening. default:8086
        series_name: Name of series/table to log data to
        polling_interval: polling interval for measurements in seconds. default:1
        debug: whether to excalate logging to debug
@@ -55,10 +55,10 @@ def main(ip_or_url,
     stop_logging=None
     try:
         t, stop_logging = start_logger(ip_or_url,
-                                       port,
                                        username,
                                        password,
                                        database,
+                                       port=port,
                                        series_name=series_name,
                                        polling_interval=polling_interval,
                                        retention_duration=retention_duration,
