@@ -84,6 +84,10 @@ def _set_retention_policy(influxdb_client, database, retention_duration, policy_
                                                 default=True)
 
 
+class MetricsRecordingFailed(Exception):
+    pass
+
+
 def start_logger(ip_or_url,
                  username,
                  password,
@@ -105,6 +109,8 @@ def start_logger(ip_or_url,
     database: Name of database to log data to. It will create the database if one doesn't exist
     port: A number indicating the port on which influxdb is listening
     series_name: Name of series/table to log data to
+    polling_interval: polling interval for measurements in seconds [default:1]
+    retention_duration: the duration to retain the measurements for valid values are 1h, 90m, 12h, 7d, and 4w. default:1d
     tags: One or more tags to apply to the data. These can then be used to group or select timeseries
           Example: --machine my_machine --cluster kerb01
 
@@ -112,7 +118,12 @@ def start_logger(ip_or_url,
 
     logger = _logger()
     logger.info('Trying to connect to {} on port {} as {}'.format(ip_or_url, port, username))
-    client = InfluxDBClient(ip_or_url, port, username, password)
+    try:
+        client = InfluxDBClient(ip_or_url, port, username, password)
+    except TimeoutError:
+        logger.warning('Could not connect to InfluxDB. GPU metrics NOT being recorded')
+        raise MetricsRecordingFailed()
+
     logger.info('Connected')
 
     _switch_to_database(client, database)
@@ -134,16 +145,19 @@ def _start_logger_process(ip_or_url,
                           polling_interval=1,
                           retention_duration=MEASUREMENTS_RETENTION_DURATION,
                           **tags):
-    t, stop_logging = start_logger(ip_or_url,
-                                   username,
-                                   password,
-                                   database,
-                                   port=port,
-                                   series_name=series_name,
-                                   polling_interval=polling_interval,
-                                   retention_duration=retention_duration,
-                                   **tags)
-    t.join()
+    try:
+        t, stop_logging = start_logger(ip_or_url,
+                                       username,
+                                       password,
+                                       database,
+                                       port=port,
+                                       series_name=series_name,
+                                       polling_interval=polling_interval,
+                                       retention_duration=retention_duration,
+                                       **tags)
+        t.join()
+    except MetricsRecordingFailed:
+        return None
 
 
 @contextmanager
@@ -156,6 +170,24 @@ def log_context(ip_or_url,
                 polling_interval=1,
                 retention_duration=MEASUREMENTS_RETENTION_DURATION,
                 **tags):
+    """ GPU logging context
+
+       Logs GPU measurements to an influxdb database
+
+       Parameters
+       ----------
+       ip_or_url: ip or url of influxdb
+       username: Username to log into influxdb database
+       password: Password to log into influxdb database
+       database: Name of database to log data to. It will create the database if one doesn't exist
+       series_name: Name of series/table to log data to
+       port: A number indicating the port on which influxdb is listening
+       polling_interval: polling interval for measurements in seconds [default:1]
+       retention_duration: the duration to retain the measurements for valid values are 1h, 90m, 12h, 7d, and 4w. default:1d
+       tags: One or more tags to apply to the data. These can then be used to group or select timeseries
+             Example: machine=my_machine cluster=kerb01
+
+       """
     logger = _logger()
     logger.info('Logging GPU to Database {}'.format(ip_or_url))
 
