@@ -4,10 +4,10 @@ SHELL := /bin/bash
 define PROJECT_HELP_MSG
 Usage:
 	make help                           show this message
-	make run							start influx container and grafana container
-	make stop							stop all containers
-	make remove							remove all containers
-	make clean							delete grafana and influxdb data
+	make run                            start influx container and grafana container
+	make stop                           stop all containers
+	make remove                         remove all containers
+	make clean                          delete grafana and influxdb data
 endef
 export PROJECT_HELP_MSG
 
