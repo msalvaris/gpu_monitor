@@ -1,8 +1,10 @@
 import logging
 from contextlib import contextmanager
+from functools import partial
 from multiprocessing import Process
 from time import sleep
 
+from dotenv import find_dotenv, dotenv_values
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
 from requests.exceptions import ConnectionError
@@ -163,33 +165,32 @@ def _start_logger_process(ip_or_url,
 
 
 @contextmanager
-def log_context(ip_or_url,
-                username,
-                password,
-                database,
-                series_name,
-                port=8086,
-                polling_interval=1,
-                retention_duration=MEASUREMENTS_RETENTION_DURATION,
-                **tags):
+def _log_process(ip_or_url,
+                 username,
+                 password,
+                 database,
+                 series_name,
+                 port=8086,
+                 polling_interval=1,
+                 retention_duration=MEASUREMENTS_RETENTION_DURATION,
+                 **tags):
     """ GPU logging context
 
-       Logs GPU measurements to an influxdb database
+    Logs GPU measurements to an influxdb database
 
-       Parameters
-       ----------
-       ip_or_url: ip or url of influxdb
-       username: Username to log into influxdb database
-       password: Password to log into influxdb database
-       database: Name of database to log data to. It will create the database if one doesn't exist
-       series_name: Name of series/table to log data to
-       port: A number indicating the port on which influxdb is listening
-       polling_interval: polling interval for measurements in seconds [default:1]
-       retention_duration: the duration to retain the measurements for valid values are 1h, 90m, 12h, 7d, and 4w. default:1d
-       tags: One or more tags to apply to the data. These can then be used to group or select timeseries
-             Example: machine=my_machine cluster=kerb01
-
-       """
+    Parameters
+    ----------
+    ip_or_url: ip or url of influxdb
+    username: Username to log into influxdb database
+    password: Password to log into influxdb database
+    database: Name of database to log data to. It will create the database if one doesn't exist
+    series_name: Name of series/table to log data to
+    port: A number indicating the port on which influxdb is listening
+    polling_interval: polling interval for measurements in seconds [default:1]
+    retention_duration: the duration to retain the measurements for valid values are 1h, 90m, 12h, 7d, and 4w. default:1d
+    tags: One or more tags to apply to the data. These can then be used to group or select timeseries
+          Example: machine=my_machine cluster=kerb01
+    """
     logger = _logger()
     logger.info('Logging GPU to Database {}'.format(ip_or_url))
 
@@ -208,3 +209,20 @@ def log_context(ip_or_url,
     yield p
     p.terminate()
     p.join()
+
+
+def _generate_log_context():
+    logger = _logger()
+    try:
+        dotenv_path = find_dotenv(raise_error_if_not_found=True)
+        logger.info('Found .evn, loading variables')
+        env_dict = dotenv_values(dotenv_path=dotenv_path)
+        return partial(_log_process, **env_dict)
+    except IOError:
+        logger.info('Didn\'t find .env')
+        return _log_process
+
+
+log_context = _generate_log_context()
+
+
