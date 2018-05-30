@@ -36,7 +36,7 @@ def _log_process(ip_or_url,
        port: A number indicating the port on which influxdb is listening. default:8086
        series_name: Name of series/table to log data to
        polling_interval: polling interval for measurements in seconds. default:1
-       debug: whether to excalate logging to debug
+       debug: whether to escalate logging to debug
        retention_duration: the duration to retain the measurements for valid values are 1h, 90m, 12h, 7d, and 4w. default:1d
        tags: One or more tags to apply to the data. These can then be used to group or select timeseries
              Example: --machine my_machine --cluster kerb01
