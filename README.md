@@ -62,14 +62,14 @@ sudo usermod -aG docker $USER
 ```
 
 If you haven't downloaded the whole repo then download the [scripts directory](scripts). In there should be three files
-The file *example.env* contains the following variables:
-INFLUXDB_DB=gpudb
-INFLUXDB_USER=admin
-INFLUXDB_USER_PASSWORD=password
-INFLUXDB_ADMIN_ENABLED=true
-GF_SECURITY_ADMIN_PASSWORD=password
-GRAFANA_DATA_LOCATION=/tmp/grafana
-INFLUXDB_DATA_LOCATION=/tmp/influxdb
+The file *example.env* contains the following variables:  
+INFLUXDB_DB=gpudb  
+INFLUXDB_USER=admin  
+INFLUXDB_USER_PASSWORD=password  
+INFLUXDB_ADMIN_ENABLED=true  
+GF_SECURITY_ADMIN_PASSWORD=password   
+GRAFANA_DATA_LOCATION=/tmp/grafana  
+INFLUXDB_DATA_LOCATION=/tmp/influxdb  
 
 Please change them to appropriate values. The data location entries (GRAFANA_DATA_LOCATION, INFLUXDB_DATA_LOCATION) will tell Grafana and InfluxDB where to store their data so that when the containers are destroyed the data remains.
 Once you have edited it rename *example.env* to *.env*.
