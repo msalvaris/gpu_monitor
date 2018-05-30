@@ -1,15 +1,14 @@
 import logging
 from contextlib import contextmanager
-from functools import partial
 from multiprocessing import Process
 from time import sleep
 
-from dotenv import find_dotenv, dotenv_values
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError
 from requests.exceptions import ConnectionError
 from toolz import curry, compose
 
+from gpumon.influxdb.dotenv import populate_args_from_dotenv
 from gpumon.influxdb.gpu_interface import start_pushing_measurements_to
 
 MEASUREMENTS_RETENTION_DURATION = '1d'
@@ -211,18 +210,6 @@ def _log_process(ip_or_url,
     p.join()
 
 
-def _generate_log_context():
-    logger = _logger()
-    try:
-        dotenv_path = find_dotenv(raise_error_if_not_found=True)
-        logger.info('Found .evn, loading variables')
-        env_dict = dotenv_values(dotenv_path=dotenv_path)
-        return partial(_log_process, **env_dict)
-    except IOError:
-        logger.info('Didn\'t find .env')
-        return _log_process
-
-
-log_context = _generate_log_context()
+log_context = populate_args_from_dotenv(_log_process)
 
 

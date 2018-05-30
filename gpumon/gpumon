@@ -4,6 +4,7 @@ import logging
 
 import fire
 
+from gpumon.influxdb.dotenv import populate_args_from_dotenv
 from gpumon.influxdb.gpu_logger import start_logger, MEASUREMENTS_RETENTION_DURATION, MetricsRecordingFailed
 
 
@@ -11,16 +12,16 @@ def _logger():
     return logging.getLogger(__name__)
 
 
-def main(ip_or_url,
-         username,
-         password,
-         database,
-         port=8086,
-         series_name='gpu_measurements',
-         polling_interval=1,
-         debug=False,
-         retention_duration=MEASUREMENTS_RETENTION_DURATION,
-         **tags):
+def _log_process(ip_or_url,
+                 username,
+                 password,
+                 database,
+                 port=8086,
+                 series_name='gpu_measurements',
+                 polling_interval=1,
+                 debug=False,
+                 retention_duration=MEASUREMENTS_RETENTION_DURATION,
+                 **tags):
     """ Starts GPU logger
 
        Logs GPU measurements to an influxdb database
@@ -76,6 +77,5 @@ def main(ip_or_url,
         if stop_logging is not None:
             stop_logging()
 
-
 if __name__=="__main__":
-    fire.Fire(main)
+    fire.Fire(populate_args_from_dotenv(_log_process))
