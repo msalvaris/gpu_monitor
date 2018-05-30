@@ -47,7 +47,7 @@ show(log.plot())# Will plot the utilisation during the context
 
 log()# Will return dataframe with all the logged properties
 ```
-[Click here to see the example notebook](examples/InfluxDBLoggerExample.ipynb)
+[Click here to see the example notebook](examples/notebooks/InfluxDBLoggerExample.ipynb)
 
 ### Running gpu monitor in Jupyter notebook with InfluxDB based log context
 To do this you need to set up and [install InfluxDB](https://docs.influxdata.com/influxdb/v1.5/introduction/installation/) and [Grafana](http://docs.grafana.org/installation/).
