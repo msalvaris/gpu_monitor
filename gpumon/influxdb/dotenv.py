@@ -13,7 +13,9 @@ def populate_args_from_dotenv(func):
         dotenv_path = find_dotenv(raise_error_if_not_found=True)
         logger.info('Found .evn, loading variables')
         env_dict = dotenv_values(dotenv_path=dotenv_path)
-        return partial(func, **env_dict)
+        par_func = partial(func, **env_dict)
+        par_func.__doc__ = func.__doc__
+        return par_func
     except IOError:
         logger.info('Didn\'t find .env')
         return func
