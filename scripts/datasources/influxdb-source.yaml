@@ -1,0 +1,11 @@
+# # config file version
+apiVersion: 1
+
+datasources:
+  - name: gpu
+    type: influxdb
+    access: proxy
+    database: gpudb
+    user: admin
+    password: password
+    url: http://influxdb:8086
