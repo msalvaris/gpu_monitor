@@ -120,4 +120,4 @@ You will need to set up the data source. Below is an example screen-shot of the 
   <img src="static/influxdb_config.png" alt="Datasource config"/>
 </p>
 
-Once that is set up you will need to also set up your dashboard. The dashboard shown in the gif above can be found [here](scripts/dashboards/GPUDashboard.json)
+Once that is set up you will need to also set up your dashboard. The dashboard shown in the gif above can be found [here](scripts/provisioning/dashboards/GPUDashboard.json)

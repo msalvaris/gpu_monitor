@@ -21,6 +21,6 @@ grafana:
     - influxdb
   volumes:
     - ${GRAFANA_DATA_LOCATION}:/var/lib/grafana
-    - .:/grafana-conf
+    - ${PWD}/provisioning:/grafana-conf
   env_file:
     - .env
