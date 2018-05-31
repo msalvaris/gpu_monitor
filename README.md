@@ -32,6 +32,13 @@ Or just install using pip
 pip install git+https://github.com/msalvaris/gpu_monitor.git
 ```
 
+## Docker 
+You can also run it straight from a docker image (masalvar_gpumon).
+
+```bash
+nvidia-docker run -it masalvar/gpumon gpumon msdlvm.southcentralus.cloudapp.azure.com admin password gpudb 8086 gpuseries
+```
+
 ## Usage
 ### Running gpu monitor in Jupyter notebook with file based log context
 ```python
@@ -67,9 +74,10 @@ INFLUXDB_DB=gpudb
 INFLUXDB_USER=admin  
 INFLUXDB_USER_PASSWORD=password  
 INFLUXDB_ADMIN_ENABLED=true  
-GF_SECURITY_ADMIN_PASSWORD=password   
+GF_SECURITY_ADMIN_PASSWORD=password  
 GRAFANA_DATA_LOCATION=/tmp/grafana  
 INFLUXDB_DATA_LOCATION=/tmp/influxdb  
+GF_PATHS_PROVISIONING=/grafana-conf  
 
 Please change them to appropriate values. The data location entries (GRAFANA_DATA_LOCATION, INFLUXDB_DATA_LOCATION) will tell Grafana and InfluxDB where to store their data so that when the containers are destroyed the data remains.
 Once you have edited it rename *example.env* to *.env*.
@@ -104,20 +112,24 @@ gpumon localhost admin password gpudb --series_name=gpuseries
 ```
 
 The above command will connect to the influxdb database running on localhost with
-user=admin
-password=password
-database=gpudb
-series_name=gpuseries
+user=admin   
+password=password  
+database=gpudb  
+series_name=gpuseries  
+
+You can also put your parameters in a .env file in the same directory as you are executing the cli logger or the logging context and the necessary information will be pulled from it. You can also pass commands to them and these will override what is in your .env file
+
 
 #### Setting up Grafana dashboard
-If everything went well above GPU metrics should be flowing to your database.
-To set up your Grafana dashbaord log in to Grafana by pointing a browser to the IP of your VM or computer on port 3000. *If you are executing on a VM make sure that port is open*.
+By default a datasource and dashboard are set up for you if everything went well above GPU metrics should be flowing to your database.
+You can log in to Grafana by pointing a browser to the IP of your VM or computer on port 3000. *If you are executing on a VM make sure that port is open*.
 Once there log in with the credentials you specified in your .env file.
 
-You will need to set up the data source. Below is an example screen-shot of the datasource config
+#### Manually setting up datasource and dashboard
+Below is an example screen-shot of the datasource config
 
 <p align="center">
   <img src="static/influxdb_config.png" alt="Datasource config"/>
 </p>
 
-Once that is set up you will need to also set up your dashboard. The dashboard shown in the gif above can be found [here](scripts/provisioning/dashboards/GPUDashboard.json)
+Once that is set up you will need to also set up your dashboard. The dashboard shown in the gif above can be found [here](scripts/provisioning/dashboards/GPUDashboard.json) and is installed by default.
