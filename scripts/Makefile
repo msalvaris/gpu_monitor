@@ -16,7 +16,13 @@ help:
 
 run:
 	@echo "Starting InfluxDB and Grafana"
-	docker-compose up -d
+	$(eval grafana:=$(shell dotenv get GRAFANA_DATA_LOCATION| cut -d '=' -f 2))
+	$(eval influxdb:=$(shell dotenv get INFLUXDB_DATA_LOCATION| cut -d '=' -f 2))
+	@mkdir $(grafana)
+	@chmod 777 $(grafana)
+	@mkdir $(influxdb)
+	@chmod 777 $(influxdb)
+	@docker-compose up -d
 
 stop:
 	docker-compose down
@@ -28,8 +34,8 @@ clean:
 	$(eval grafana:=$(shell dotenv get GRAFANA_DATA_LOCATION| cut -d '=' -f 2))
 	$(eval influxdb:=$(shell dotenv get INFLUXDB_DATA_LOCATION| cut -d '=' -f 2))
 	@echo "Deleting $(grafana)"
-	@rm -rf $(grafana)
+	@sudo rm -rf $(grafana)
 	@echo "Deleting $(influxdb)"
-	@rm -rf $(influxdb)
+	@sudo rm -rf $(influxdb)
 
 .PHONY: help run stop remove clean
