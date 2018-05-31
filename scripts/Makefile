@@ -16,6 +16,12 @@ help:
 
 run:
 	@echo "Starting InfluxDB and Grafana"
+	$(eval grafana:=$(shell dotenv get GRAFANA_DATA_LOCATION| cut -d '=' -f 2))
+	$(eval influxdb:=$(shell dotenv get INFLUXDB_DATA_LOCATION| cut -d '=' -f 2))
+	mkdir $(grafana)
+	chmod 777 $(grafana)
+	mkdir $(influxdb)
+	chmod 777 $(influxdb)
 	docker-compose up -d
 
 stop:
