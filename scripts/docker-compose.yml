@@ -24,4 +24,4 @@ grafana:
     - ${PWD}/provisioning:/grafana-conf
   env_file:
     - .env
-  user: "104"
+  user: "472"
